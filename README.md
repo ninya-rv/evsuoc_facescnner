@@ -59,24 +59,6 @@ composer install --prefer-dist --no-dev -o
 
 composer install
 
-Here’s your updated README with detailed instructions for running the development server and accessing the admin panel:
-
-EVSU Web-Based Face Recognition Classroom Attendance System
-A web-based classroom attendance system using CakePHP and browser-based face recognition to automate student attendance in real time.
-
-Requirements
-Ensure the following are installed:
-
-PHP 8.0+
-Composer
-MySQL
-Git
-XAMPP/WAMP (for local server)
-Virtual Environment Tool (e.g., php-virtualenv)
-Verify installations:
-
-php -v
-composer -v
 
 ## Run the Development Server
 Start CakePHP’s built-in server:
