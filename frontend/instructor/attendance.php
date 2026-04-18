@@ -1,0 +1,271 @@
+<?php
+session_start();
+include "../../backend/db.php";
+
+if (!isset($_SESSION['user_id'])) {
+    header("Location: ../sign_in.html");
+    exit;
+}
+if ($_SESSION['role'] !== 'instructor') {
+    header("Location: ../admin/dashboard.php");
+    exit;
+}
+$instructor_id = $_SESSION['user_id'];
+$instructorQuery = "SELECT name, email FROM users WHERE id = '$instructor_id' AND role = 'instructor' LIMIT 1";
+$instructorResult = mysqli_query($conn, $instructorQuery);
+
+if ($instructorResult && mysqli_num_rows($instructorResult) > 0) {
+    $instructorData = mysqli_fetch_assoc($instructorResult);
+    $instructorName = $instructorData['name'];
+    $instructorEmail = $instructorData['email'];
+
+    $nameParts = explode(" ", trim($instructorName));
+    $initials = "";
+    foreach ($nameParts as $part) {
+        $initials .= strtoupper(substr($part, 0, 1));
+        if (strlen($initials) >= 2) break;
+    }
+} else {
+    $instructorName = $_SESSION['name'] ?? 'Instructor';
+    $instructorEmail = 'No email found';
+    $initials = 'IN';
+}
+
+$instructor_name = $instructorName;
+$subjectQuery = "SELECT DISTINCT subject 
+                 FROM instructor_assignment 
+                 WHERE instructor_name = '$instructor_name'
+                 ORDER BY subject ASC";
+$subjectResult = mysqli_query($conn, $subjectQuery);
+
+$subjectList = [];
+if ($subjectResult && mysqli_num_rows($subjectResult) > 0) {
+    while ($subjectRow = mysqli_fetch_assoc($subjectResult)) {
+        $subjectList[] = $subjectRow['subject'];
+    }
+}
+
+$attendanceQuery = "SELECT * FROM attendance 
+                    WHERE instructor_name='$instructor_name'
+                    ORDER BY date DESC, time_in DESC";
+
+$attendanceResult = mysqli_query($conn, $attendanceQuery);
+
+$attendanceList = [];
+while ($row = mysqli_fetch_assoc($attendanceResult)) {
+    $attendanceList[] = $row;
+}
+
+$present = count(array_filter($attendanceList, fn($a) => $a['status'] == 'Present'));
+$absent  = count(array_filter($attendanceList, fn($a) => $a['status'] == 'Absent'));
+$late    = count(array_filter($attendanceList, fn($a) => $a['status'] == 'Late'));
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EVSU-BSIT Attendance</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header class="header">
+    <div class="logo-title">
+        <img src="/css/EVSU_Official_Logo.png" alt="EVSU Logo">
+        <h2>EVSU-BSIT</h2>
+    </div>
+
+    <div class="profile-wrapper">
+        <div class="profile" id="profileBtn"><?php echo htmlspecialchars($initials); ?></div>
+
+        <div class="profile-dropdown" id="profileDropdown" style="display:none;">
+            <div class="profile-header">
+                <div class="profile-circle"><?php echo htmlspecialchars($initials); ?></div>
+                <br>
+                <h4><?php echo htmlspecialchars($instructorName); ?></h4>
+                <p><?php echo htmlspecialchars($instructorEmail); ?></p>
+                <span class="badge">INSTRUCTOR</span>
+            </div>
+
+            <div class="profile-actions">
+                <a href="../sign_in.html">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </a>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+<div class="sidebar">
+    <ul>
+        <li>
+            <a href="/frontend/instructor/dashboard.php">
+                <i class="fa-solid fa-gauge"></i>
+                <span>Dashboard</span>
+            </a>
+        </li>
+        <li>
+            <a href="/frontend/instructor/attendance.php" class="active">
+                <i class="fa-solid fa-calendar-check"></i>
+                <span>Attendance</span>
+            </a>
+        </li>
+        <li>
+            <a href="/frontend/instructor/scanner.php">
+                <i class="fa-solid fa-camera"></i>
+                <span>Face Scanner</span>
+            </a>
+        </li>
+    </ul>
+</div>
+<div class="main">
+    <h3>Attendance</h3>
+    <div class="cards">
+        <div class="card">
+            <h4>Present</h4>
+            <p><?php 
+                $present = count(array_filter($attendanceList, fn($a) => $a['status'] == 'Present')); 
+                echo $present;
+            ?></p>
+        </div>
+
+        <div class="card">
+            <h4>Absent</h4>
+            <p><?php 
+                $absent = count(array_filter($attendanceList, fn($a) => $a['status'] == 'Absent')); 
+                echo $absent;
+            ?></p>
+        </div>
+
+        <div class="card">
+            <h4>Late</h4>
+            <p><?php 
+                $late = count(array_filter($attendanceList, fn($a) => $a['status'] == 'Late')); 
+                echo $late;
+            ?></p>
+        </div>
+    </div>
+    <div class="student-section">
+        <h4>Student Attendance</h4>
+        <br>
+        <div class="search-filter">
+            <input type="text" id="searchInput" placeholder="Search students...">
+
+            <button class="filter-btn" id="filterToggle">
+                <i class="fa-solid fa-filter"></i>
+            </button>
+        </div>
+        <div class="filter-panel" id="filterPanel">
+            <div class="filter-grid">
+                 <div class="filter-group">
+                    <label>Subject</label>
+                    <select id="filterSubject">
+                        <option value="">All</option>
+                        <?php foreach ($subjectList as $subject): ?>
+                            <option value="<?php echo htmlspecialchars($subject); ?>">
+                                <?php echo htmlspecialchars($subject); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Year Level</label>
+                    <select id="filterYear">
+                        <option value="">All</option>
+                        <option value="1st">1st</option>
+                        <option value="2nd">2nd</option>
+                        <option value="3rd">3rd</option>
+                        <option value="4th">4th</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Section</label>
+                    <select id="filterSection">
+                        <option value="">All</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option> 
+                        <option value="D">D</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Date</label>
+                    <input type="date" id="filterDate">
+                </div>
+
+                <div class="filter-group">
+                    <label>Status</label>
+                    <select id="filterStatus">
+                        <option value="">All</option>
+                        <option value="Present">Present</option>
+                        <option value="Absent">Absent</option>
+                        <option value="Late">Late</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <table class="student-table" data-page="attendance">
+            <thead>
+                <tr>
+                    <th>Student ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Subject</th>
+                    <th>Year</th>
+                    <th>Section</th>
+                    <th>Date</th>
+                    <th>Time In</th>
+                    <th>Time Out</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="attendanceTable">
+                <?php if (!empty($attendanceList)): ?>
+                    <?php foreach ($attendanceList as $row): ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($row['student_id']); ?></td>
+                            <td><?php echo htmlspecialchars($row['name']); ?></td>
+                            <td><?php echo htmlspecialchars($row['email']); ?></td>
+                            <td><?php echo htmlspecialchars($row['subject']); ?></td>
+                            <td><?php echo htmlspecialchars($row['year_level']); ?></td>
+                            <td><?php echo htmlspecialchars($row['section']); ?></td>
+                            <td><?php echo htmlspecialchars($row['date']); ?></td>
+                            <td><?php echo !empty($row['time_in']) ? date("g:i A", strtotime($row['time_in'])) : '-'; ?></td>
+                            <td><?php echo !empty($row['time_out']) ? date("g:i A", strtotime($row['time_out'])) : '-'; ?></td>
+                            <td><?php echo htmlspecialchars($row['status']); ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="10" style="text-align:center;">No attendance records found.</td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>
+<script src="/backend/script.js"></script>
+<script>
+    const profileBtn = document.getElementById("profileBtn");
+    const dropdown = document.getElementById("profileDropdown");
+
+    profileBtn.addEventListener("click", () => {
+        dropdown.style.display =
+            dropdown.style.display === "block" ? "none" : "block";
+    });
+    document.addEventListener("click", function(e) {
+        if (!profileBtn.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.style.display = "none";
+        }
+    });
+</script>
+
+</body>
+</html>

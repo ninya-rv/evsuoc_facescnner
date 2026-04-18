@@ -1,0 +1,547 @@
+/* ========== Global Reset ========== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background-color: #f3f3f3;
+}
+
+/* ========== Header ========== */
+.header {
+    background-color: #8B0000;
+    color: white;
+    padding: 15px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo-title img {
+    width: 45px;
+    height: 45px;
+    object-fit: contain;
+}
+
+.profile {
+    background: white;
+    color: #8B0000;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+/* ========== Layout ========== */
+.container {
+    display: flex;
+    height: calc(100vh - 70px);
+}
+
+/* ========== Sidebar ========== */
+.sidebar {
+    width: 220px;
+    background-color: #e6e6e6;
+    padding-top: 30px;
+}
+
+.sidebar ul {
+    list-style: none;
+}
+
+.sidebar ul li a {
+    text-decoration: none;
+    color: #333;
+    padding: 15px 25px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-weight: 500;
+    transition: 0.3s ease;
+}
+
+.sidebar ul li a:hover {
+    background-color: #d0d0d0;
+}
+
+.sidebar ul li a i {
+    width: 22px;
+    text-align: center;
+    font-size: 16px;
+}
+
+/* ========== Main Content ========== */
+.main {
+    flex: 1;
+    padding: 30px;
+    position: relative;
+    overflow: auto;
+}
+
+.main::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("/css/EVSU_Official_Logo.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 500px;
+    opacity: 0.08;
+    filter: blur(1px);
+    z-index: 0;
+}
+
+.main > * {
+    position: relative;
+    z-index: 1;
+}
+
+.main h3 {
+    margin-bottom: 20px;
+    color: #8B0000;
+}
+
+/* PROFILE WRAPPER */
+.profile-wrapper{
+    position: relative;
+    z-index: 1000;
+}
+
+/* PROFILE ICON */
+.profile{
+    width:40px;
+    height:40px;
+    background:#f7f3f3;
+    color:rgb(90, 10, 10);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:50%;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+/* DROPDOWN */
+.profile-dropdown{
+    position:absolute;
+    right:0;
+    top:50px;
+    width:260px;
+    background:white;
+    border-radius:10px;
+    box-shadow:0 5px 20px rgba(0,0,0,0.2);
+    display:none;
+    overflow:hidden;
+    z-index: 2000; /* IMPORTANT */
+}
+
+/* PROFILE HEADER */
+.profile-header{
+    text-align:center;
+    padding:20px;
+    background:#e9eef8;
+}
+
+.profile-circle{
+    width:60px;
+    height:60px;
+    background:#66050e;
+    color:white;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin:auto;
+    font-size:20px;
+    font-weight:bold;
+}
+
+.profile-header p{
+    font-size:13px;
+    color:#555;
+}
+.profile-header h4{
+    font-size:13px;
+    color:#090808;
+}
+
+.badge{
+    display:inline-block;
+    margin-top:6px;
+    padding:4px 10px;
+    background:#d7e3ff;
+    color:#2f5bd3;
+    font-size:12px;
+    border-radius:20px;
+}
+
+/* LOGOUT */
+.profile-actions{
+    padding:12px;
+}
+
+.profile-actions a{
+    text-decoration:none;
+    color:#333;
+    display:block;
+    padding:10px;
+}
+
+.profile-actions a:hover{
+    background:#f5f5f5;
+}
+
+/* ========== Cards ========== */
+.cards {
+    display: flex;
+    gap: 30px;
+    margin-bottom: 40px;
+}
+
+.card {
+    flex: 1;
+    min-width: 280px;
+    padding: 35px 30px;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    transition: 0.3s ease;
+}
+
+.card p {
+    font-size: 36px;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+
+
+/* ========== Search & Filter ========== */
+.search-filter {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.search-filter input {
+    width: 300px;
+    padding: 10px 15px;
+    border-radius: 25px;
+    border: 1px solid #ccc;
+    outline: none;
+}
+
+.filter-container {
+    position: relative;
+}
+
+.filter-btn {
+    background: #8B0000;
+    color: white;
+    border: none;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border-radius: 50%;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.3s ease;
+}
+
+.filter-btn:hover {
+    background: #a00000;
+    transform: scale(1.05);
+}
+
+.filter-dropdown {
+    position: absolute;
+    top: 45px;
+    right: 0;
+    width: 220px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+    padding: 15px;
+    display: none;
+    z-index: 100;
+}
+
+.filter-dropdown h4 {
+    margin-bottom: 10px;
+    color: #8B0000;
+}
+
+.filter-dropdown label {
+    font-size: 13px;
+    margin-top: 10px;
+    display: block;
+}
+
+.filter-dropdown select {
+    width: 100%;
+    padding: 6px;
+    margin-top: 5px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+/* FILTER PANEL (Pushes content down naturally) */
+.filter-panel {
+    background: #fffafa;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    display: none;
+    animation: slideDown 0.3s ease;
+}
+
+.filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.filter-group label {
+    display: block;
+    font-size: 13px;
+    margin-bottom: 6px;
+    color: #8B0000;
+}
+
+.filter-group select,
+.filter-group input {
+    width: 100%;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.apply-btn {
+    width: 100%;
+    margin-top: 15px;
+    padding: 8px;
+    background: #8B0000;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.apply-btn:hover {
+    background: #a00000;
+}
+
+/* Assignment Form - single line */
+.assignment-form {
+    margin-bottom: 20px;
+}
+
+/* Row for everything on one line */
+.assignment-form .form-row {
+    display:flex;
+    gap:12px;
+    align-items:flex-end;
+    flex-wrap:wrap;
+}
+
+/* Inputs and selects same height */
+.assignment-form .form-row input,
+.assignment-form .form-row select {
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    outline: none;
+    flex: 1; /* distribute width equally */
+    min-width: 120px; /* prevent being too small */
+}
+
+/* Assign button */
+.assignment-form .assign-btn {
+    padding: 10px 20px;
+    background-color: #8B0000;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.3s ease;
+    flex-shrink: 0; /* prevent button from shrinking */
+}
+
+.assignment-form .assign-btn:hover {
+    background-color: #a00000;
+    transform: scale(1.05);
+}
+
+/* Responsive: stack if screen too narrow */
+@media (max-width: 768px) {
+    .assignment-form .form-row {
+        flex-direction: column;
+    }
+
+    .assignment-form .form-row input,
+    .assignment-form .form-row select,
+    .assignment-form .assign-btn {
+        width: 100%;
+    }
+}
+
+/* ========== Student Section ========== */
+.student-section {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+}
+
+.student-table {
+    margin-top: 10px;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.student-table th {
+    background-color: #8B0000;
+    color: white;
+    padding: 10px;
+    text-align: left;
+}
+
+.student-table td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.student-table tr:hover {
+    background-color: #f2f2f2;
+}
+/* Center Action column */
+.student-table th:last-child,
+.student-table td:last-child{
+    text-align:center;
+}
+
+/* Maroon action icon */
+.action-icon{
+    color:#800000;
+    font-size:18px;
+    cursor:pointer;
+    transition:0.2s;
+}
+
+.action-icon:hover{
+    transform:scale(1.2);
+    opacity:0.8;
+}
+.time-inputs{
+    display:flex;
+    flex-direction:column;
+    flex:1;
+    min-width:150px;
+}
+
+.time-inputs label{
+    font-size:12px bold;
+    margin-bottom:3px;
+    color:#000000;
+}
+
+.time-inputs input{
+    padding:10px 12px;
+    border-radius:6px;
+    border:1px solid #ccc;
+    outline:none;
+    width:100%;
+}
+
+/* Subject Search same size as inputs */
+.subject-search-container{
+    position: relative;
+    flex: 1;
+    min-width: 180px;
+}
+
+/* Subject input same style as other inputs */
+#subjectInput{
+    width:100%;
+    padding:10px 12px;
+    border-radius:6px;
+    border:1px solid #ccc;
+    outline:none;
+}
+
+/* Dropdown styling */
+.subject-dropdown{
+    position:absolute;
+    top:100%;
+    left:0;
+    right:0;
+    background:white;
+    border:1px solid #ccc;
+    border-radius:6px;
+    max-height:200px;
+    overflow-y:auto;
+    display:none;
+    z-index:1000;
+    box-shadow:0 4px 10px rgba(0,0,0,0.1);
+}
+
+.subject-dropdown div{
+    padding:10px;
+    cursor:pointer;
+}
+
+.subject-dropdown div:hover{
+    background:#f2f2f2;
+}
+
+.subject-dropdown{
+    position:absolute;
+    top:100%;
+    left:0;
+    right:0;
+    background:white;
+    border:1px solid #ccc;
+    max-height:200px;
+    overflow-y:auto;
+    display:none;
+    z-index:1000;
+}
+
+.subject-dropdown div{
+    padding:8px;
+    cursor:pointer;
+}
+
+.subject-dropdown div:hover{
+    background:#f2f2f2;
+}
