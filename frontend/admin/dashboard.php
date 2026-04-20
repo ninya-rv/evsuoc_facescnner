@@ -7,6 +7,18 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     exit;
 }
 
+$adminName = trim($_SESSION['name'] ?? '');
+$adminInitials = 'SA';
+if ($adminName !== '') {
+    $nameParts = preg_split('/\s+/', $adminName);
+    if (count($nameParts) > 1) {
+        $adminInitials = strtoupper(substr($nameParts[0], 0, 1) . substr(end($nameParts), 0, 1));
+    } else {
+        $adminInitials = strtoupper(substr($nameParts[0], 0, 2));
+    }
+}
+$adminEmail = $_SESSION['email'] ?? 'admin@evsu.edu.ph';
+
 $totalStudentsQuery = "SELECT COUNT(*) as total FROM students";
 $totalStudents = mysqli_fetch_assoc(mysqli_query($conn, $totalStudentsQuery))['total'];
 
@@ -68,15 +80,14 @@ while ($row = mysqli_fetch_assoc($result)) {
         <h2>EVSU-BSIT</h2>
     </div>
    <div class="profile-wrapper">
-        <div class="profile" id="profileBtn">SA</div>
+        <div class="profile" id="profileBtn"><?php echo htmlspecialchars($adminInitials); ?></div>
 
         <div class="profile-dropdown" id="profileDropdown">
-
             <div class="profile-header">
-                <div class="profile-circle">SA</div>
+                <div class="profile-circle"><?php echo htmlspecialchars($adminInitials); ?></div>
                 <br>
                 <h4>System Administrator</h4>
-                <p>evsuoccadmin@gmail.com</p>
+                <p><?php echo htmlspecialchars($adminEmail); ?></p>
                 <span class="badge">ADMINISTRATOR</span>
             </div>
 
@@ -87,8 +98,6 @@ while ($row = mysqli_fetch_assoc($result)) {
             </div>
         </div>
     </div>
-
-</div>
 </header>
 
 <div class="container">
@@ -268,31 +277,58 @@ while ($row = mysqli_fetch_assoc($result)) {
         });
     }
 
-    searchInput.addEventListener("keyup", filterTable);
-    filterYear.addEventListener("change", filterTable);
-    filterStatus.addEventListener("change", filterTable);
-    filterType.addEventListener("change", filterTable);
+    if (searchInput) {
+        searchInput.addEventListener("keyup", filterTable);
+    }
+    if (filterYear) {
+        filterYear.addEventListener("change", filterTable);
+    }
+    if (filterStatus) {
+        filterStatus.addEventListener("change", filterTable);
+    }
+    if (filterType) {
+        filterType.addEventListener("change", filterTable);
+    }
 
-    resetBtn.addEventListener("click", () => {
-        searchInput.value = "";
-        filterYear.value = "";
-        filterStatus.value = "";
-        filterType.value = "";
+    if (resetBtn && filterPanel) {
+        resetBtn.addEventListener("click", () => {
+            if (searchInput) searchInput.value = "";
+            if (filterYear) filterYear.value = "";
+            if (filterStatus) filterStatus.value = "";
+            if (filterType) filterType.value = "";
 
-        const rows = document.querySelectorAll("#userTable tr");
-        rows.forEach(row => row.style.display = "");
+            const rows = document.querySelectorAll("#userTable tr");
+            rows.forEach(row => row.style.display = "");
 
-        filterPanel.style.display = "none";
-    });
+            filterPanel.style.display = "none";
+        });
+    }
 
-    filterToggle.addEventListener("click", () => {
-        searchInput.value = "";
-        filterYear.value = "";
-        filterStatus.value = "";
-        filterType.value = "";
+    if (filterToggle && filterPanel) {
+        filterToggle.addEventListener("click", () => {
+            if (searchInput) searchInput.value = "";
+            if (filterYear) filterYear.value = "";
+            if (filterStatus) filterStatus.value = "";
+            if (filterType) filterType.value = "";
 
-        filterTable();
-        filterPanel.style.display = "block";
-    });
+            filterTable();
+            filterPanel.style.display = "block";
+        });
+    }
+    const profileBtn = document.getElementById("profileBtn");
+    const dropdown = document.getElementById("profileDropdown");
+
+    if (profileBtn && dropdown) {
+        profileBtn.addEventListener("click", () => {
+            dropdown.style.display =
+                dropdown.style.display === "block" ? "none" : "block";
+        });
+
+        document.addEventListener("click", function(e) {
+            if (!profileBtn.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.style.display = "none";
+            }
+        });
+    }
     </script>
 </html>

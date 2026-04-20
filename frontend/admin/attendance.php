@@ -7,6 +7,18 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     exit;
 }
 
+$adminName = trim($_SESSION['name'] ?? '');
+$adminInitials = 'SA';
+if ($adminName !== '') {
+    $nameParts = preg_split('/\s+/', $adminName);
+    if (count($nameParts) > 1) {
+        $adminInitials = strtoupper(substr($nameParts[0], 0, 1) . substr(end($nameParts), 0, 1));
+    } else {
+        $adminInitials = strtoupper(substr($nameParts[0], 0, 2));
+    }
+}
+$adminEmail = $_SESSION['email'] ?? 'admin@evsu.edu.ph';
+
 $attendanceQuery = "SELECT * FROM attendance ORDER BY date DESC, time_in DESC";
 $attendanceResult = mysqli_query($conn, $attendanceQuery);
 
@@ -37,7 +49,25 @@ $late    = count(array_filter($attendanceList, fn($a) => $a['status'] == 'Late')
         <h2>EVSU-BSIT</h2>
     </div>
 
-    <div class="profile">SA</div>
+    <div class="profile-wrapper">
+        <div class="profile" id="profileBtn"><?php echo htmlspecialchars($adminInitials); ?></div>
+
+        <div class="profile-dropdown" id="profileDropdown">
+            <div class="profile-header">
+                <div class="profile-circle"><?php echo htmlspecialchars($adminInitials); ?></div>
+                <br>
+                <h4>System Administrator</h4>
+                <p><?php echo htmlspecialchars($adminEmail); ?></p>
+                <span class="badge">ADMINISTRATOR</span>
+            </div>
+
+            <div class="profile-actions">
+                <a href="../sign_in.html">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </a>
+            </div>
+        </div>
+    </div>
     </div>
 
     <div class="container">
@@ -225,5 +255,21 @@ $late    = count(array_filter($attendanceList, fn($a) => $a['status'] == 'Late')
     filterYear.addEventListener("change", filterTable);
     filterDate.addEventListener("change", filterTable);
     filterStatus.addEventListener("change", filterTable);
+
+    const profileBtn = document.getElementById("profileBtn");
+    const dropdown = document.getElementById("profileDropdown");
+
+    if (profileBtn && dropdown) {
+        profileBtn.addEventListener("click", () => {
+            dropdown.style.display =
+                dropdown.style.display === "block" ? "none" : "block";
+        });
+
+        document.addEventListener("click", function(e) {
+            if (!profileBtn.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.style.display = "none";
+            }
+        });
+    }
     </script>
 </html>
