@@ -98,7 +98,7 @@ if (!empty($conditions)) {
     <div class="profile-wrapper">
         <div class="profile" id="profileBtn"><?php echo htmlspecialchars($initials); ?></div>
 
-        <div class="profile-dropdown" id="profileDropdown">
+        <div class="profile-dropdown" id="profileDropdown" style="display:none;">
             <div class="profile-header">
                 <div class="profile-circle"><?php echo htmlspecialchars($initials); ?></div>
                 <br>
@@ -160,20 +160,33 @@ if (!empty($conditions)) {
             <h4>Student List</h4>
             <br>
             <div class="search-filter">
-                <input type="text" placeholder="Search students...">
+                <input type="text" id="searchInput" placeholder="Search students...">
 
                 <button class="filter-btn" id="filterToggle">
                     <i class="fa-solid fa-filter"></i>
                 </button>
             </div>
-            <div class="filter-panel" id="filterPanel">
+            <div class="filter-panel" id="filterPanel" style="display:none;">
                 <div class="filter-grid">
                     <div class="filter-group">
                         <label>Year Level</label>
                         <select id="filterYear">
                             <option value="">All</option>
+                            <option value="1st Year">1st Year</option>
                             <option value="2nd Year">2nd Year</option>
                             <option value="3rd Year">3rd Year</option>
+                            <option value="4th Year">4th Year</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Section</label>
+                        <select id="filterSection">
+                            <option value="">All</option>
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="C">C</option>
+                            <option value="D">D</option>
+                            <option value="E">E</option>
                         </select>
                     </div>
                     <div class="filter-group">
@@ -184,11 +197,6 @@ if (!empty($conditions)) {
                             <option value="Inactive">Inactive</option>
                         </select>
                     </div>
-                    <div class="filter-group">
-                        <label>Date</label>
-                        <input type="date" id="filterDate">
-                    </div>
-
                 </div>
             </div>
 
@@ -226,21 +234,84 @@ if (!empty($conditions)) {
     </main>
 
 </div>
-</body>
-    <script src="/backend/script.js"></script>
-     <script>
+    <script>
+        const searchInput = document.getElementById("searchInput");
+        const filterYear = document.getElementById("filterYear");
+        const filterStatus = document.getElementById("filterStatus");
+        const filterSection = document.getElementById("filterSection");
+        const filterToggle = document.getElementById("filterToggle");
+        const filterPanel = document.getElementById("filterPanel");
+
+        function getRowText(cells, index) {
+            return cells[index] ? cells[index].textContent.toLowerCase().trim() : "";
+        }
+
+        function filterTable() {
+            const searchValue = searchInput ? searchInput.value.toLowerCase().trim() : "";
+            const yearValue = filterYear ? filterYear.value.toLowerCase().trim() : "";
+            const statusValue = filterStatus ? filterStatus.value.toLowerCase().trim() : "";
+            const sectionValue = filterSection ? filterSection.value.toLowerCase().trim() : "";
+
+            document.querySelectorAll("tbody tr").forEach(row => {
+                const cells = row.querySelectorAll("td");
+                if (cells.length === 0) return;
+
+                const id = getRowText(cells, 0);
+                const name = getRowText(cells, 1);
+                const email = getRowText(cells, 2);
+                const year = getRowText(cells, 3);
+                const section = getRowText(cells, 4);
+                const status = getRowText(cells, 5);
+
+                const matchesSearch =
+                    searchValue === "" ||
+                    [id, name, email, year, section, status].some(value => value.includes(searchValue));
+
+                const matchesYear = yearValue === "" || year === yearValue;
+                const matchesStatus = statusValue === "" || status === statusValue;
+                const matchesSection = sectionValue === "" || section.includes(sectionValue);
+
+                row.style.display =
+                    matchesSearch && matchesYear && matchesStatus && matchesSection
+                        ? ""
+                        : "none";
+            });
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener("input", filterTable);
+        }
+        [filterYear, filterStatus, filterSection].forEach(control => {
+            if (control) {
+                control.addEventListener("change", filterTable);
+            }
+        });
+
+        if (filterToggle && filterPanel) {
+            filterToggle.addEventListener("click", () => {
+                const isVisible = filterPanel.style.display === "block";
+                filterPanel.style.display = isVisible ? "none" : "block";
+                filterToggle.innerHTML = isVisible
+                    ? '<i class="fa-solid fa-filter"></i>'
+                    : '<i class="fa-solid fa-arrows-rotate"></i>';
+            });
+        }
+
         const profileBtn = document.getElementById("profileBtn");
         const dropdown = document.getElementById("profileDropdown");
 
-        profileBtn.addEventListener("click", () => {
-            dropdown.style.display =
-                dropdown.style.display === "block" ? "none" : "block";
-        });
+        if (profileBtn && dropdown) {
+            profileBtn.addEventListener("click", () => {
+                dropdown.style.display =
+                    dropdown.style.display === "block" ? "none" : "block";
+            });
 
-        document.addEventListener("click", function(e){
-            if(!profileBtn.contains(e.target) && !dropdown.contains(e.target)){
-                dropdown.style.display = "none";
-            }
-        });
+            document.addEventListener("click", function(e){
+                if(!profileBtn.contains(e.target) && !dropdown.contains(e.target)){
+                    dropdown.style.display = "none";
+                }
+            });
+        }
     </script>
+</body>
 </html>
