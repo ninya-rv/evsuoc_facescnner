@@ -13,8 +13,11 @@ if ($_SESSION['role'] !== 'instructor') {
     exit;
 }
 
+date_default_timezone_set('Asia/Manila');
 $instructor_id = $_SESSION['user_id'];
 
+$manilaNow = new DateTime('now', new DateTimeZone('Asia/Manila'));
+$currentDate = $manilaNow->format('Y-m-d');
 
 $instructorQuery = "SELECT name, email FROM users WHERE id = '$instructor_id' AND role = 'instructor' LIMIT 1";
 $instructorResult = mysqli_query($conn, $instructorQuery);
@@ -290,13 +293,18 @@ $classResult = mysqli_query($conn, $classQuery);
 
                 <?php if ($classResult && mysqli_num_rows($classResult) > 0): ?>
                     <?php while ($class = mysqli_fetch_assoc($classResult)): ?>
-                        <option 
+                        <?php 
+                    $classEndTimestamp = strtotime($currentDate . ' ' . $class['end_time']);
+                    $isEnded = $classEndTimestamp < $manilaNow->getTimestamp();
+                ?>
+                <option 
                             value="<?php echo $class['id']; ?>"
                             data-year="<?php echo htmlspecialchars($class['year_level']); ?>"
                             data-section="<?php echo htmlspecialchars($class['section']); ?>"
                             data-subject="<?php echo htmlspecialchars($class['subject']); ?>"
                             data-start="<?php echo htmlspecialchars($class['start_time']); ?>"
                             data-end="<?php echo htmlspecialchars($class['end_time']); ?>"
+                            <?php echo $isEnded ? 'disabled' : ''; ?>
                         >
                             <?php 
                             echo htmlspecialchars($class['subject']) . " | " . 
@@ -304,6 +312,9 @@ $classResult = mysqli_query($conn, $classQuery);
                                  htmlspecialchars($class['section']) . " | " . 
                                  date("g:i A", strtotime($class['start_time'])) . " - " . 
                                  date("g:i A", strtotime($class['end_time']));
+                            if ($isEnded) {
+                                echo ' (Ended)';
+                            }
                             ?>
                         </option>
                     <?php endwhile; ?>

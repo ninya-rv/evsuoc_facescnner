@@ -62,6 +62,42 @@ if (empty($student_id) || empty($name) || empty($subject) || empty($year_level) 
     exit;
 }
 
+if (empty($start_time) || empty($end_time)) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Invalid class schedule data."
+    ]);
+    exit;
+}
+
+$currentTimestamp = strtotime($currentTime);
+$startTimestamp = strtotime($start_time);
+$endTimestamp = strtotime($end_time);
+
+if ($currentTimestamp === false || $startTimestamp === false || $endTimestamp === false) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Invalid class time format."
+    ]);
+    exit;
+}
+
+if ($currentTimestamp < $startTimestamp) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Class has not started yet. Please scan during the scheduled time."
+    ]);
+    exit;
+}
+
+if ($currentTimestamp > $endTimestamp) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Class has already ended. You cannot record attendance now."
+    ]);
+    exit;
+}
+
 $studentCheck = "SELECT * FROM students 
                  WHERE student_id='$student_id'
                  AND year='$year_level'

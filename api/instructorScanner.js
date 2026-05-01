@@ -198,8 +198,10 @@ document.addEventListener("DOMContentLoaded", () => {
             console.log("Attendance save result:", result);
             if (result.success) {
                 if (statusDiv) statusDiv.innerText = `✅ ${studentData.name} - ${result.message}`;
+                showWarning("");
             } else {
                 if (statusDiv) statusDiv.innerText = `⚠️ ${result.message}`;
+                showWarning(result.message);
             }
         } catch (error) {
             console.error("Error saving attendance:", error);
