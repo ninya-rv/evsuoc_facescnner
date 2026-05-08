@@ -89,7 +89,6 @@ if (!empty($conditions)) {
 </head>
 <body>
 
-<!-- Header -->
 <header class="header">
     <div class="logo-title">
         <img src="/css/EVSU_Official_Logo.png" alt="EVSU Logo">
