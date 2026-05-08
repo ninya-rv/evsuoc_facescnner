@@ -209,7 +209,6 @@ if (!empty($conditions)) {
                     </div>
                 </div>
             </div>
-
             <table class="student-table" id="userTable">
                 <thead>
                     <tr>

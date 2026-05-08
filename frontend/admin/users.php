@@ -19,20 +19,43 @@ if ($adminName !== '') {
 }
 $adminEmail = $_SESSION['email'] ?? 'admin@evsu.edu.ph';
 
-$totalUsersQuery = "SELECT COUNT(*) as total FROM users";
-    $totalResult = mysqli_query($conn, $totalUsersQuery);
-    $totalRow = mysqli_fetch_assoc($totalResult);
-    $totalUsers = $totalRow['total'];
+$totalUsersQuery = "
+    SELECT COUNT(*) as total
+    FROM users
+    WHERE role = 'instructor'
+";
 
-    $activeUsersQuery = "SELECT COUNT(*) as active FROM users WHERE status='active'";
-    $activeResult = mysqli_query($conn, $activeUsersQuery);
-    $activeRow = mysqli_fetch_assoc($activeResult);
-    $activeUsers = $activeRow['active'];
+$totalResult = mysqli_query($conn, $totalUsersQuery);
 
-    $inactiveUsersQuery = "SELECT COUNT(*) as inactive FROM users WHERE status='inactive'";
-    $inactiveResult = mysqli_query($conn, $inactiveUsersQuery);
-    $inactiveRow = mysqli_fetch_assoc($inactiveResult);
-    $inactiveUsers = $inactiveRow['inactive'];
+$totalRow = mysqli_fetch_assoc($totalResult);
+
+$totalUsers = $totalRow['total'];
+
+$activeUsersQuery = "
+    SELECT COUNT(*) as active
+    FROM users
+    WHERE role = 'instructor'
+    AND status='active'
+";
+
+$activeResult = mysqli_query($conn, $activeUsersQuery);
+
+$activeRow = mysqli_fetch_assoc($activeResult);
+
+$activeUsers = $activeRow['active'];
+
+$inactiveUsersQuery = "
+    SELECT COUNT(*) as inactive
+    FROM users
+    WHERE role = 'instructor'
+    AND status='inactive'
+";
+
+$inactiveResult = mysqli_query($conn, $inactiveUsersQuery);
+
+$inactiveRow = mysqli_fetch_assoc($inactiveResult);
+
+$inactiveUsers = $inactiveRow['inactive'];
 ?>
 <!DOCTYPE html>
 <html lang="en">

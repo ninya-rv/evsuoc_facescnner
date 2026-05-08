@@ -222,7 +222,6 @@ $adminEmail = $_SESSION['email'] ?? 'admin@evsu.edu.ph';
 <script src="../../backend/script.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", () => {
-
     const subjects = [
     {code:"IT1131A",name:"Introduction to Computing"},
     {code:"IT1341",name:"Computer Programming"},
@@ -292,50 +291,71 @@ $adminEmail = $_SESSION['email'] ?? 'admin@evsu.edu.ph';
     document.querySelectorAll(".edit-btn").forEach(btn => {
         btn.addEventListener("click", () => {
             const row = btn.closest("tr");
-            const subjectValue = row.cells[3].textContent;
+            const id = row.getAttribute("data-id");
+            const instructor = row.cells[0].textContent.trim();
+            const year = row.cells[1].textContent.trim();
+            const section = row.cells[2].textContent.trim();
+            const subject = row.cells[3].textContent.trim();
+            const room = row.cells[4].textContent.trim();
+            document.getElementById("edit_id").value = id;
+            const instructorSelect = document.getElementById("instructor_name");
+            Array.from(instructorSelect.options).forEach(option => {
 
-            loadSubjects();
-            subjectSelect.value = subjectValue;
-            document.getElementById("edit_id").value = row.getAttribute("data-id");
-            document.getElementById("instructor_name").value = row.cells[0].textContent;
-            document.getElementById("year_level").value = row.cells[1].textContent;
-            document.getElementById("section").value = row.cells[2].textContent;
-            document.getElementById("room").value = row.cells[4].textContent;
+                if (option.value.trim() === instructor.trim()) {
 
-            const timeRange = row.cells[5].textContent.split(" - ");
-            if(timeRange.length === 2){
-                document.getElementById("start_time").value = convertTo24Hour(timeRange[0]);
-                document.getElementById("end_time").value = convertTo24Hour(timeRange[1]);
+                    instructorSelect.value = option.value;
+                }
+            });
+            document.getElementById("year_level").value = year;
+            document.getElementById("section").value = section;
+            document.getElementById("subjectInput").value = subject;
+            document.getElementById("subject").value = subject;
+
+            document.getElementById("room").value = room;
+            const timeRange = row.cells[5].textContent.trim().split(" - ");
+
+            if (timeRange.length === 2) {
+
+                document.getElementById("start_time").value =
+                    convertTo24Hour(timeRange[0].trim());
+
+                document.getElementById("end_time").value =
+                    convertTo24Hour(timeRange[1].trim());
             }
-
-            document.querySelector(".assignment-form").scrollIntoView({behavior: "smooth"});
+            document.querySelector(".assignment-form")
+                .scrollIntoView({
+                    behavior: "smooth"
+                });
         });
     });
 
-    function convertTo24Hour(timeStr){
-        const [time, modifier] = timeStr.split(" ");
-        let [hours, minutes] = time.split(":");
-        hours = parseInt(hours);
-        if(modifier === "PM" && hours < 12) hours += 12;
-        if(modifier === "AM" && hours === 12) hours = 0;
-        return `${hours.toString().padStart(2,"0")}:${minutes}`;
-    }
-});
- const profileBtn = document.getElementById("profileBtn");
-    const dropdown = document.getElementById("profileDropdown");
-
-    if (profileBtn && dropdown) {
-        profileBtn.addEventListener("click", () => {
-            dropdown.style.display =
-                dropdown.style.display === "block" ? "none" : "block";
-        });
-
-        document.addEventListener("click", function(e) {
-            if (!profileBtn.contains(e.target) && !dropdown.contains(e.target)) {
-                dropdown.style.display = "none";
+    function convertTo24Hour(timeStr) {
+            const [time, modifier] = timeStr.split(" ");
+            let [hours, minutes] = time.split(":");
+            hours = parseInt(hours);
+            if (modifier === "PM" && hours < 12) {
+                hours += 12;
             }
-        });
-    }
+            if (modifier === "AM" && hours === 12) {
+                hours = 0;
+            }
+            return `${String(hours).padStart(2, "0")}:${minutes}`;
+        }
+    });
+    const profileBtn = document.getElementById("profileBtn");
+    const dropdown = document.getElementById("profileDropdown");
+        if (profileBtn && dropdown) {
+            profileBtn.addEventListener("click", () => {
+                dropdown.style.display =
+                    dropdown.style.display === "block" ? "none" : "block";
+            });
+
+            document.addEventListener("click", function(e) {
+                if (!profileBtn.contains(e.target) && !dropdown.contains(e.target)) {
+                    dropdown.style.display = "none";
+                }
+            });
+        }
 </script>
 </body>
 </html>

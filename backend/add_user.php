@@ -1,4 +1,4 @@
-<?php
+<?php 
 session_start();
 include "db.php";
 
@@ -12,8 +12,6 @@ $password = mysqli_real_escape_string($conn, $_POST['password']);
 
 $role = "instructor";
 
-$hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-
 $check = "SELECT * FROM users WHERE email='$email'";
 $result = mysqli_query($conn, $check);
 
@@ -22,7 +20,7 @@ if (mysqli_num_rows($result) > 0) {
 }
 
 $sql = "INSERT INTO users(name, email, password, role, status)
-        VALUES('$name', '$email', '$hashedPassword', '$role', 'active')";
+        VALUES('$name', '$email', '$password', '$role', 'active')";
 
 if (mysqli_query($conn, $sql)) {
     header("Location: ../../frontend/admin/users.php?success=1");

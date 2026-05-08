@@ -282,7 +282,6 @@ $late = count(array_filter(
                     id="searchInput"
                     placeholder="Search students..."
                 >
-
                 <div class="filter-actions">
 
                     <button class="icon-btn" id="filterToggle" title="Filter">
@@ -296,18 +295,6 @@ $late = count(array_filter(
             </div>
         <div class="filter-panel" id="filterPanel">
             <div class="filter-grid">
-                 <div class="filter-group">
-                    <label>Subject</label>
-                    <select id="filterSubject">
-                        <option value="">All</option>
-                        <?php foreach ($subjectList as $subject): ?>
-                            <option value="<?php echo htmlspecialchars($subject); ?>">
-                                <?php echo htmlspecialchars($subject); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
                 <div class="filter-group">
                     <label>Year Level</label>
                     <select id="filterYear">
@@ -318,7 +305,6 @@ $late = count(array_filter(
                         <option value="4th">4th</option>
                     </select>
                 </div>
-
                 <div class="filter-group">
                     <label>Section</label>
                     <select id="filterSection">
@@ -329,12 +315,10 @@ $late = count(array_filter(
                         <option value="D">D</option>
                     </select>
                 </div>
-
                 <div class="filter-group">
                     <label>Date</label>
                     <input type="date" id="filterDate">
                 </div>
-
                 <div class="filter-group">
                     <label>Status</label>
                     <select id="filterStatus">
@@ -346,7 +330,6 @@ $late = count(array_filter(
                 </div>
             </div>
         </div>
-
         <table class="student-table" data-page="attendance">
             <thead>
                 <tr>
