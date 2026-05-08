@@ -160,11 +160,22 @@ if (!empty($conditions)) {
             <h4>Student List</h4>
             <br>
             <div class="search-filter">
-                <input type="text" id="searchInput" placeholder="Search students...">
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="Search students..."
+                >
 
-                <button class="filter-btn" id="filterToggle">
-                    <i class="fa-solid fa-filter"></i>
-                </button>
+                <div class="filter-actions">
+
+                    <button class="icon-btn" id="filterToggle" title="Filter">
+                        <i class="fa-solid fa-filter"></i>
+                    </button>
+
+                    <button class="icon-btn" id="downloadPDF" title="Download PDF">
+                        <i class="fa-solid fa-file-pdf"></i>
+                    </button>
+                </div>
             </div>
             <div class="filter-panel" id="filterPanel" style="display:none;">
                 <div class="filter-grid">
@@ -193,14 +204,14 @@ if (!empty($conditions)) {
                         <label>Status</label>
                         <select id="filterStatus">
                             <option value="">All</option>
-                            <option value="Active">Active</option>
-                            <option value="Inactive">Inactive</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
                         </select>
                     </div>
                 </div>
             </div>
 
-            <table class="student-table">
+            <table class="student-table" id="userTable">
                 <thead>
                     <tr>
                         <th>Student ID</th>
@@ -220,7 +231,7 @@ if (!empty($conditions)) {
                             <td><?php echo htmlspecialchars($student['email']); ?></td>
                             <td><?php echo htmlspecialchars($student['year']); ?></td>
                             <td><?php echo htmlspecialchars($student['section']); ?></td>
-                            <td><?php echo isset($student['status']) ? htmlspecialchars($student['status']) : 'Active'; ?></td>
+                            <td><?php echo isset($student['status']) ? htmlspecialchars($student['status']) : 'inactive'; ?></td>
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
@@ -234,7 +245,7 @@ if (!empty($conditions)) {
     </main>
 
 </div>
-    <script>
+<script>
         const searchInput = document.getElementById("searchInput");
         const filterYear = document.getElementById("filterYear");
         const filterStatus = document.getElementById("filterStatus");
@@ -268,7 +279,9 @@ if (!empty($conditions)) {
                     [id, name, email, year, section, status].some(value => value.includes(searchValue));
 
                 const matchesYear = yearValue === "" || year === yearValue;
-                const matchesStatus = statusValue === "" || status === statusValue;
+                const matchesStatus =
+                    statusValue === "" ||
+                    status.trim().toLowerCase() === statusValue.trim().toLowerCase();
                 const matchesSection = sectionValue === "" || section.includes(sectionValue);
 
                 row.style.display =
@@ -312,6 +325,61 @@ if (!empty($conditions)) {
                 }
             });
         }
-    </script>
+document.getElementById("downloadPDF").addEventListener("click", () => {
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    let tableData = [];
+
+    const rows = document.querySelectorAll("#userTable tr");
+
+    rows.forEach(row => {
+
+        if (row.style.display === "none") return;
+
+        const cells = row.querySelectorAll("td");
+
+        if (cells.length >= 6) {
+
+            tableData.push([
+                cells[0].textContent.trim(), 
+                cells[1].textContent.trim(),
+                cells[2].textContent.trim(), 
+                cells[3].textContent.trim(), 
+                cells[4].textContent.trim(), 
+                cells[5].textContent.trim()  
+            ]);
+        }
+    });
+
+    doc.setFontSize(14);
+    doc.text("Student List", 14, 15);
+
+    doc.autoTable({
+        startY: 25,
+        head: [[
+            "Student ID",
+            "Name",
+            "Email",
+            "Year",
+            "Section",
+            "Status"
+        ]],
+        body: tableData,
+        theme: "grid",
+        headStyles: {
+            fillColor: [128, 0, 0]
+        },
+        styles: {
+            fontSize: 9
+        }
+    });
+
+    doc.save("students.pdf");
+});
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 </body>
 </html>

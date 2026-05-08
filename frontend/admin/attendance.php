@@ -129,15 +129,24 @@ $late    = count(array_filter($attendanceList, fn($a) => $a['status'] == 'Late')
         <div class="student-section">
             <h4>Student Attendance</h4>
             <br>
-
             <div class="search-filter">
-                <input type="text" id="searchInput" placeholder="Search students...">
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="Search students..."
+                >
 
-                <button class="filter-btn" id="filterToggle">
-                    <i class="fa-solid fa-filter"></i>
-                </button>
+                <div class="filter-actions">
+
+                    <button class="icon-btn" id="filterToggle" title="Filter">
+                        <i class="fa-solid fa-filter"></i>
+                    </button>
+
+                    <button class="icon-btn" id="downloadPDF" title="Download PDF">
+                        <i class="fa-solid fa-file-pdf"></i>
+                    </button>
+                </div>
             </div>
-
             <div class="filter-panel" id="filterPanel">
                 <div class="filter-grid">
                     <div class="filter-group">
@@ -207,6 +216,8 @@ $late    = count(array_filter($attendanceList, fn($a) => $a['status'] == 'Late')
     </div>
 </div>
 </body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <script src="/backend/script.js"></script>
     <script>
     const searchInput = document.getElementById("searchInput");
@@ -271,5 +282,69 @@ $late    = count(array_filter($attendanceList, fn($a) => $a['status'] == 'Late')
             }
         });
     }
+    const downloadPDF = document.getElementById("downloadPDF");
+
+downloadPDF.addEventListener("click", () => {
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    let tableData = [];
+
+    const rows = document.querySelectorAll("#attendanceTable tr");
+
+    rows.forEach(row => {
+
+        if (row.style.display !== "none") {
+
+            const cells = row.querySelectorAll("td");
+            if (cells.length >= 8) {
+
+                tableData.push([
+                    cells[0].textContent.trim(), 
+                    cells[1].textContent.trim(), 
+                    cells[2].textContent.trim(), 
+                    cells[3].textContent.trim(), 
+                    cells[4].textContent.trim(), 
+                    cells[5].textContent.trim(), 
+                    cells[6].textContent.trim(), 
+                    cells[7].textContent.trim()  
+                ]);
+            }
+        }
+    });
+
+    doc.setFontSize(16);
+    doc.text("Attendance", 14, 15);
+
+    doc.autoTable({
+        startY: 25,
+
+        head: [[
+            "Student ID",
+            "Name",
+            "Email",
+            "Year",
+            "Date",
+            "Time In",
+            "Time Out",
+            "Status"
+        ]],
+
+        body: tableData,
+
+        theme: "grid",
+
+        headStyles: {
+            fillColor: [128, 0, 0]
+        },
+
+        styles: {
+            fontSize: 9
+        }
+    });
+
+    doc.save("attendance.pdf");
+});
     </script>
 </html>

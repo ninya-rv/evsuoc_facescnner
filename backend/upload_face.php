@@ -1,24 +1,28 @@
-<?php
+<?php 
 
 header("Content-Type: application/json");
 
 $conn = new mysqli("localhost","root","","class_attendance");
 
 if ($conn->connect_error) {
+
     echo json_encode([
         "success" => false,
         "msg" => "Database connection failed"
     ]);
+
     exit;
 }
 
 $data = json_decode(file_get_contents("php://input"), true);
 
 if(!$data){
+
     echo json_encode([
         "success" => false,
         "msg" => "No data received"
     ]);
+
     exit;
 }
 
@@ -30,9 +34,15 @@ $section = $data['section'];
 $new_descriptor = $data['descriptor'];
 
 
+$status = "inactive";
+
+
 $checkID = $conn->prepare("SELECT id FROM students WHERE student_id = ?");
+
 $checkID->bind_param("s", $student_id);
+
 $checkID->execute();
+
 $resultID = $checkID->get_result();
 
 if($resultID->num_rows > 0){
@@ -44,6 +54,7 @@ if($resultID->num_rows > 0){
 
     exit;
 }
+
 
 function faceDistance($a,$b){
 
@@ -57,6 +68,7 @@ function faceDistance($a,$b){
 
     return sqrt($sum);
 }
+
 
 $result = $conn->query("SELECT face_descriptor FROM students");
 
@@ -75,15 +87,31 @@ while($row = $result->fetch_assoc()){
 
         exit;
     }
-
 }
 
 
 $descriptor = json_encode($new_descriptor);
 
-$stmt = $conn->prepare("INSERT INTO students (student_id, name, email, year, section, face_descriptor) VALUES (?,?,?,?,?,?)");
 
-$stmt->bind_param("ssssss",$student_id,$name,$email,$year,$section,$descriptor);
+/* INSERT WITH STATUS */
+$stmt = $conn->prepare("
+    INSERT INTO students
+    (student_id, name, email, year, section, face_descriptor, status)
+    VALUES
+    (?,?,?,?,?,?,?)
+");
+
+$stmt->bind_param(
+    "sssssss",
+    $student_id,
+    $name,
+    $email,
+    $year,
+    $section,
+    $descriptor,
+    $status
+);
+
 
 if($stmt->execute()){
 

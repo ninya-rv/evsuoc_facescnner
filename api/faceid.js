@@ -1,3 +1,5 @@
+// faceid.js
+
 function isLocalhost() {
   return window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
 }
@@ -10,6 +12,7 @@ function showAlert(message) {
 
 function showWarning(message) {
   const warningDiv = document.getElementById("warning");
+
   if (warningDiv && !isLocalhost()) {
     warningDiv.innerHTML = message;
   }
@@ -36,10 +39,11 @@ async function loadModels() {
     statusDiv.innerText = "Ready to register face.";
 }
 
-
 async function startCamera() {
 
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    const stream = await navigator.mediaDevices.getUserMedia({
+        video: true
+    });
 
     video.srcObject = stream;
     video.style.display = "block";
@@ -51,10 +55,9 @@ async function startCamera() {
     });
 }
 
-
 async function registerFace() {
 
-    warningDiv.innerText="";
+    warningDiv.innerText = "";
 
     const student_id = document.getElementById('student_id').value.trim();
     const name = document.getElementById('name').value.trim();
@@ -63,15 +66,17 @@ async function registerFace() {
     const section = document.getElementById('section').value;
 
     if (!student_id || !name || !email || !year || !section) {
+
         showWarning("⚠️ Please fill all fields first.");
-        return;
+        return false;
     }
 
     const agree = document.getElementById("agree_terms");
 
-    if(!agree.checked){
+    if (!agree.checked) {
+
         showWarning("⚠️ You must agree to the Terms & Conditions before registering your face.");
-        return;
+        return false;
     }
 
     try {
@@ -93,7 +98,7 @@ async function registerFace() {
             statusDiv.innerText = "❌ No face detected.";
             showAlert("❌ No face detected. Please try again.");
 
-            return;
+            return false;
         }
 
         const descriptor = Array.from(detection.descriptor);
@@ -109,12 +114,17 @@ async function registerFace() {
             },
 
             body: JSON.stringify({
+
                 student_id,
                 name,
                 email,
                 year,
                 section,
-                descriptor
+                descriptor,
+
+                // AUTO INACTIVE STATUS
+                status: "inactive"
+
             })
 
         });
@@ -124,25 +134,39 @@ async function registerFace() {
         if (result.success) {
 
             statusDiv.innerText = "✅ Student Registered Successfully";
-            showAlert("✅ Face registered and saved to database!");
 
-            document.getElementById("registrationForm").reset();
+            // STEP 2 HIDE
+            document.getElementById("step2-content").classList.remove("active");
+            document.getElementById("step2-indicator").classList.remove("active");
+
+            // STEP 3 SHOW
+            document.getElementById("step3-content").classList.add("active");
+            document.getElementById("step3-indicator").classList.add("active");
+
+            stopVideoStream();
+
+            return true;
 
         } else if (result.type === "duplicate_id") {
 
             statusDiv.innerText = "⚠️ Student ID already registered!";
             showAlert("⚠️ This Student ID is already registered.");
 
+            return false;
+
         } else if (result.type === "duplicate_face") {
 
             statusDiv.innerText = "⚠️ This face is already registered!";
             showAlert("⚠️ This face already exists in the system.");
+
+            return false;
 
         } else {
 
             statusDiv.innerText = "❌ " + result.msg;
             showAlert("❌ Registration failed: " + result.msg);
 
+            return false;
         }
 
     } catch (error) {
@@ -152,57 +176,64 @@ async function registerFace() {
         statusDiv.innerText = "❌ System error.";
         showAlert("❌ System error occurred.");
 
+        return false;
     }
 }
 
+function showTerms() {
 
-function showTerms(){
-    document.getElementById("termsModal").style.display="block";
+    document.getElementById("termsModal").style.display = "flex";
 }
 
-function closeTerms(){
-    document.getElementById("termsModal").style.display="none";
-}
+function closeTerms() {
 
+    document.getElementById("termsModal").style.display = "none";
+}
 
 function nextStep() {
+
     const studentId = document.getElementById("student_id").value.trim();
     const name = document.getElementById("name").value.trim();
     const email = document.getElementById("email").value.trim();
     const year = document.getElementById("year").value;
     const section = document.getElementById("section").value;
     const agreeTerms = document.getElementById("agree_terms").checked;
-    const warningDiv = document.getElementById("warning");
 
     warningDiv.innerHTML = "";
 
     if (!studentId) {
-      showWarning("Please enter Student ID");
-      return;
+        showWarning("Please enter Student ID");
+        return;
     }
+
     if (!name) {
-      showWarning("Please enter Name");
-      return;
+        showWarning("Please enter Name");
+        return;
     }
+
     if (!email) {
-      showWarning("Please enter Email");
-      return;
+        showWarning("Please enter Email");
+        return;
     }
+
     if (!year) {
-      showWarning("Please select Year");
-      return;
+        showWarning("Please select Year");
+        return;
     }
+
     if (!section) {
-      showWarning("Please select Section");
-      return;
+        showWarning("Please select Section");
+        return;
     }
+
     if (!agreeTerms) {
-      showWarning("Please agree to Terms & Conditions");
-      return;
+        showWarning("Please agree to Terms & Conditions");
+        return;
     }
 
     document.getElementById("step1-content").classList.remove("active");
     document.getElementById("step2-content").classList.add("active");
+
     document.getElementById("step1-indicator").classList.remove("active");
     document.getElementById("step2-indicator").classList.add("active");
 
@@ -210,8 +241,10 @@ function nextStep() {
 }
 
 function previousStep() {
+
     document.getElementById("step2-content").classList.remove("active");
     document.getElementById("step1-content").classList.add("active");
+
     document.getElementById("step2-indicator").classList.remove("active");
     document.getElementById("step1-indicator").classList.add("active");
 
@@ -219,33 +252,44 @@ function previousStep() {
 }
 
 function startVideoStream() {
-    navigator.mediaDevices.getUserMedia({ video: {} })
-      .then(stream => {
-        const video = document.getElementById("video");
+
+    navigator.mediaDevices.getUserMedia({
+        video: {}
+    })
+
+    .then(stream => {
+
         video.srcObject = stream;
         video.style.display = "block";
-      })
-      .catch(err => {
+    })
+
+    .catch(err => {
+
         showWarning("Camera access denied: " + err.message);
-      });
+    });
 }
 
 function stopVideoStream() {
-    const video = document.getElementById("video");
+
     if (video.srcObject) {
-      const tracks = video.srcObject.getTracks();
-      tracks.forEach(track => track.stop());
-      video.srcObject = null;
-      video.style.display = "none";
+
+        const tracks = video.srcObject.getTracks();
+
+        tracks.forEach(track => track.stop());
+
+        video.srcObject = null;
+        video.style.display = "none";
     }
 }
 
+document.addEventListener("DOMContentLoaded", function () {
 
-document.addEventListener("DOMContentLoaded", function() {
     const agreeTermsCheckbox = document.getElementById("agree_terms");
+
     if (agreeTermsCheckbox) {
-        agreeTermsCheckbox.addEventListener("change", function(){
-            const warningDiv = document.getElementById("warning");
+
+        agreeTermsCheckbox.addEventListener("change", function () {
+
             if (warningDiv) {
                 warningDiv.innerText = "";
             }

@@ -126,12 +126,6 @@ $totalUsersQuery = "SELECT COUNT(*) as total FROM users";
                     <input type="text" name="name" id="name" placeholder="Full Name" required>
                     <input type="email" name="email" id="email" placeholder="Email" required>
                     <input type="password" name="password" id="password" placeholder="Password" required>
-
-                    <select name="role" id="role" required>
-                        <option value="">Select Role</option>
-                        <option value="instructor">Instructor</option>
-                    </select>
-
                     <button type="submit" name="add_user" class="assign-btn">Add User</button>
                 </div>
             </form>

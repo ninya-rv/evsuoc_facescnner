@@ -7,7 +7,7 @@ if($conn->connect_error){
     exit;
 }
 
-$result = $conn->query("SELECT student_id, name, email, face_descriptor FROM students");
+$result = $conn->query("SELECT student_id, name, email, face_descriptor FROM students WHERE status = 'active'");
 
 $students = [];
 
@@ -16,7 +16,8 @@ while($row = $result->fetch_assoc()){
         "student_id" => $row["student_id"],
         "name" => $row["name"],
         "email" => $row["email"],
-        "face_descriptor" => json_decode($row["face_descriptor"])
+        "face_descriptor" => json_decode($row["face_descriptor"]),
+        "status" => "active"
     ];
 }
 

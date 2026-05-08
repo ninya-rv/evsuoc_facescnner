@@ -2,63 +2,190 @@
 session_start();
 include "../../backend/db.php";
 
+date_default_timezone_set("Asia/Manila");
+
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../sign_in.html");
     exit;
 }
+
 if ($_SESSION['role'] !== 'instructor') {
     header("Location: ../admin/dashboard.php");
     exit;
 }
+
 $instructor_id = $_SESSION['user_id'];
-$instructorQuery = "SELECT name, email FROM users WHERE id = '$instructor_id' AND role = 'instructor' LIMIT 1";
+
+$instructorQuery = "
+    SELECT name, email 
+    FROM users 
+    WHERE id = '$instructor_id' 
+    AND role = 'instructor' 
+    LIMIT 1
+";
+
 $instructorResult = mysqli_query($conn, $instructorQuery);
 
 if ($instructorResult && mysqli_num_rows($instructorResult) > 0) {
+
     $instructorData = mysqli_fetch_assoc($instructorResult);
-    $instructorName = $instructorData['name'];
+
+    $instructorName  = $instructorData['name'];
     $instructorEmail = $instructorData['email'];
 
     $nameParts = explode(" ", trim($instructorName));
+
     $initials = "";
+
     foreach ($nameParts as $part) {
+
         $initials .= strtoupper(substr($part, 0, 1));
-        if (strlen($initials) >= 2) break;
+
+        if (strlen($initials) >= 2) {
+            break;
+        }
     }
+
 } else {
-    $instructorName = $_SESSION['name'] ?? 'Instructor';
+
+    $instructorName  = $_SESSION['name'] ?? 'Instructor';
     $instructorEmail = 'No email found';
-    $initials = 'IN';
+    $initials        = 'IN';
 }
 
-$instructor_name = $instructorName;
-$subjectQuery = "SELECT DISTINCT subject 
-                 FROM instructor_assignment 
-                 WHERE instructor_name = '$instructor_name'
-                 ORDER BY subject ASC";
+$instructor_name = mysqli_real_escape_string($conn, $instructorName);
+
+$subjectQuery = "
+    SELECT DISTINCT subject
+    FROM instructor_assignment
+    WHERE instructor_name = '$instructor_name'
+    ORDER BY subject ASC
+";
+
 $subjectResult = mysqli_query($conn, $subjectQuery);
 
 $subjectList = [];
+
 if ($subjectResult && mysqli_num_rows($subjectResult) > 0) {
+
     while ($subjectRow = mysqli_fetch_assoc($subjectResult)) {
         $subjectList[] = $subjectRow['subject'];
     }
 }
 
-$attendanceQuery = "SELECT * FROM attendance 
-                    WHERE instructor_name='$instructor_name'
-                    ORDER BY date DESC, time_in DESC";
+$currentDate = date("Y-m-d");
+$currentTime = date("H:i:s");
+
+$assignmentQuery = "
+    SELECT *
+    FROM instructor_assignment
+    WHERE instructor_name = '$instructor_name'
+";
+
+$assignmentResult = mysqli_query($conn, $assignmentQuery);
+
+while ($assignment = mysqli_fetch_assoc($assignmentResult)) {
+
+    $subject    = mysqli_real_escape_string($conn, $assignment['subject']);
+    $year_level = mysqli_real_escape_string($conn, $assignment['year_level']);
+    $section    = mysqli_real_escape_string($conn, $assignment['section']);
+    $end_time   = $assignment['end_time'];
+
+    if ($currentTime >= $end_time) {
+
+        $studentQuery = "
+            SELECT *
+            FROM students
+            WHERE status = 'Active'
+            AND year = '$year_level'
+            AND section = '$section'
+        ";
+
+        $studentResult = mysqli_query($conn, $studentQuery);
+
+        while ($student = mysqli_fetch_assoc($studentResult)) {
+
+            $student_id = mysqli_real_escape_string($conn, $student['student_id']);
+            $name       = mysqli_real_escape_string($conn, $student['name']);
+            $email      = mysqli_real_escape_string($conn, $student['email']);
+
+            $checkAttendance = "
+                SELECT id
+                FROM attendance
+                WHERE student_id = '$student_id'
+                AND subject = '$subject'
+                AND date = '$currentDate'
+                LIMIT 1
+            ";
+
+            $checkResult = mysqli_query($conn, $checkAttendance);
+
+            if (mysqli_num_rows($checkResult) == 0) {
+
+                $insertAbsent = "
+                    INSERT INTO attendance (
+                        student_id,
+                        name,
+                        email,
+                        instructor_name,
+                        subject,
+                        year_level,
+                        section,
+                        date,
+                        time_in,
+                        time_out,
+                        status
+                    )
+                    VALUES (
+                        '$student_id',
+                        '$name',
+                        '$email',
+                        '$instructor_name',
+                        '$subject',
+                        '$year_level',
+                        '$section',
+                        '$currentDate',
+                        NULL,
+                        NULL,
+                        'Absent'
+                    )
+                ";
+
+                mysqli_query($conn, $insertAbsent);
+            }
+        }
+    }
+}
+
+$attendanceQuery = "
+    SELECT *
+    FROM attendance
+    WHERE instructor_name='$instructor_name'
+    ORDER BY date DESC, time_in DESC
+";
 
 $attendanceResult = mysqli_query($conn, $attendanceQuery);
 
 $attendanceList = [];
+
 while ($row = mysqli_fetch_assoc($attendanceResult)) {
     $attendanceList[] = $row;
 }
 
-$present = count(array_filter($attendanceList, fn($a) => $a['status'] == 'Present'));
-$absent  = count(array_filter($attendanceList, fn($a) => $a['status'] == 'Absent'));
-$late    = count(array_filter($attendanceList, fn($a) => $a['status'] == 'Late'));
+$present = count(array_filter(
+    $attendanceList,
+    fn($a) => $a['status'] == 'Present'
+));
+
+$absent = count(array_filter(
+    $attendanceList,
+    fn($a) => $a['status'] == 'Absent'
+));
+
+$late = count(array_filter(
+    $attendanceList,
+    fn($a) => $a['status'] == 'Late'
+));
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -150,13 +277,24 @@ $late    = count(array_filter($attendanceList, fn($a) => $a['status'] == 'Late')
     <div class="student-section">
         <h4>Student Attendance</h4>
         <br>
-        <div class="search-filter">
-            <input type="text" id="searchInput" placeholder="Search students...">
+            <div class="search-filter">
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="Search students..."
+                >
 
-            <button class="filter-btn" id="filterToggle">
-                <i class="fa-solid fa-filter"></i>
-            </button>
-        </div>
+                <div class="filter-actions">
+
+                    <button class="icon-btn" id="filterToggle" title="Filter">
+                        <i class="fa-solid fa-filter"></i>
+                    </button>
+
+                    <button class="icon-btn" id="downloadPDF" title="Download PDF">
+                        <i class="fa-solid fa-file-pdf"></i>
+                    </button>
+                </div>
+            </div>
         <div class="filter-panel" id="filterPanel">
             <div class="filter-grid">
                  <div class="filter-group">
@@ -252,6 +390,8 @@ $late    = count(array_filter($attendanceList, fn($a) => $a['status'] == 'Late')
 </div>
 </div>
 <script src="/backend/script.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 <script>
     const profileBtn = document.getElementById("profileBtn");
     const dropdown = document.getElementById("profileDropdown");
@@ -265,7 +405,66 @@ $late    = count(array_filter($attendanceList, fn($a) => $a['status'] == 'Late')
             dropdown.style.display = "none";
         }
     });
-</script>
+    document.getElementById("downloadPDF").addEventListener("click", function () {
 
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    let tableData = [];
+    const rows = document.querySelectorAll("#attendanceTable tr");
+
+    rows.forEach(row => {
+        if (row.style.display === "none") return;
+
+        const cols = row.querySelectorAll("td");
+        if (cols.length === 10) {
+
+            tableData.push([
+                cols[0].textContent.trim(), 
+                cols[1].textContent.trim(), 
+                cols[2].textContent.trim(), 
+                cols[3].textContent.trim(),
+                cols[4].textContent.trim(),
+                cols[5].textContent.trim(), 
+                cols[6].textContent.trim(), 
+                cols[7].textContent.trim(), 
+                cols[8].textContent.trim(), 
+                cols[9].textContent.trim()  
+            ]);
+        }
+    });
+
+    // Title
+    doc.setFontSize(14);
+    doc.text("Attendance", 14, 15);
+
+    // Table
+    doc.autoTable({
+        startY: 25,
+        head: [[
+            "Student ID",
+            "Name",
+            "Email",
+            "Subject",
+            "Year",
+            "Section",
+            "Date",
+            "Time In",
+            "Time Out",
+            "Status"
+        ]],
+        body: tableData,
+        theme: "grid",
+        headStyles: {
+            fillColor: [128, 0, 0]
+        },
+        styles: {
+            fontSize: 8
+        }
+    });
+
+    doc.save("attendance.pdf");
+});
+</script>
 </body>
 </html>

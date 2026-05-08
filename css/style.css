@@ -50,7 +50,6 @@ body {
     height: calc(100vh - 70px);
 }
 
-/* ========== Sidebar ========== */
 .sidebar {
     width: 220px;
     background-color: #e6e6e6;
@@ -544,4 +543,31 @@ body {
 
 .subject-dropdown div:hover{
     background:#f2f2f2;
+}
+
+.filter-actions{
+    display:flex;
+    gap:10px;
+    align-items:center;
+}
+
+/* ICON BUTTON STYLE */
+.icon-btn{
+    background:#8B0000;
+    color:white;
+    border:none;
+    width:44px;
+    height:44px;
+    border-radius:50%;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:0.3s ease;
+    font-size:16px;
+}
+
+.icon-btn:hover{
+    background:#a00000;
+    transform:scale(1.08);
 }

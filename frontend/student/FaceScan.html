@@ -31,6 +31,7 @@
     z-index: -1;
     transform: scale(1.02);
   }
+
   .container {
     position: relative;
     z-index: 1;
@@ -45,7 +46,6 @@
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
   }
 
-  /* LEFT SIDE IMAGE */
   .left {
     flex: 1;
     background: #620010;
@@ -61,7 +61,6 @@
     object-fit: contain;
   }
 
-  /* RIGHT FORM */
   .right {
     flex: 1;
     display: flex;
@@ -173,7 +172,6 @@
     cursor: pointer;
   }
 
-  /* STEP INDICATOR */
   .step-indicator {
     display: flex;
     justify-content: center;
@@ -217,7 +215,6 @@
     color: #8B0000;
   }
 
-  /* STEP CONTENT */
   .step-content {
     display: none;
     width: 100%;
@@ -291,35 +288,53 @@
   }
 </style>
 </head>
+
 <body>
 
 <div class="container">
+
   <div class="left">
-    <img src="/css/face-recognition.png" alt="Profile Icon" class="profile-icon" />
+    <img src="/css/face-recognition.png"
+         alt="Profile Icon"
+         class="profile-icon" />
   </div>
+
   <div class="right">
+
     <h2>REGISTER</h2>
 
     <div class="step-indicator">
+
       <div class="step active" id="step1-indicator">
         <div class="step-number">1</div>
         <div class="step-label">Information</div>
       </div>
+
       <div class="step" id="step2-indicator">
         <div class="step-number">2</div>
         <div class="step-label">Face Scan</div>
       </div>
+
+      <div class="step" id="step3-indicator">
+        <div class="step-number">3</div>
+        <div class="step-label">Complete</div>
+      </div>
+
     </div>
 
     <form id="registrationForm">
+
+      <!-- STEP 1 -->
       <div class="step-content active" id="step1-content">
+
         <div class="form-section">
+
           <label>Student ID</label>
           <input type="text" id="student_id" required />
 
           <label>Name</label>
           <input type="text" id="name" required />
-          
+
           <label>Email</label>
           <input type="email" id="email" required />
 
@@ -342,44 +357,121 @@
           </select>
 
           <div class="terms">
+
             <input type="checkbox" id="agree_terms" />
+
             <span>
               I agree to the
-              <a href="#" onclick="showTerms(); return false;">Terms & Conditions</a>
+              <a href="#" onclick="showTerms(); return false;">
+                Terms & Conditions
+              </a>
               for facial data collection and privacy protection.
             </span>
+
           </div>
 
           <div class="button-group">
-            <button type="button" onclick="nextStep()" class="primary">Next</button>
+
+            <button type="button"
+                    onclick="nextStep()"
+                    class="primary">
+              Next
+            </button>
+
           </div>
 
           <div id="warning"></div>
+
         </div>
+
       </div>
+
+      <!-- STEP 2 -->
       <div class="step-content" id="step2-content">
+
         <div class="form-section">
-          <p style="color: #666; margin-bottom: 20px; text-align: center;">Position your face in the video and click Register</p>
-          
+
+          <p style="
+            color:#666;
+            margin-bottom:20px;
+            text-align:center;
+          ">
+            Position your face in the video and click Register
+          </p>
+
           <video id="video" autoplay muted></video>
 
           <div class="button-group">
-            <button type="button" onclick="previousStep()" class="secondary">Back</button>
-            <button type="button" onclick="registerFace()" class="primary">Register</button>
+
+            <button type="button"
+                    onclick="previousStep()"
+                    class="secondary">
+              Back
+            </button>
+
+            <button type="button"
+                    onclick="registerFace()"
+                    class="primary">
+              Register
+            </button>
+
           </div>
 
           <div id="status"></div>
+
         </div>
+
+      </div>
+
+      <!-- STEP 3 -->
+      <div class="step-content" id="step3-content">
+
+        <div class="form-section">
+
+          <h2 style="
+            color:#8B0000;
+            margin-top:100px;
+          ">
+            Registration Successful
+          </h2>
+
+          <p style="
+            text-align:center;
+            font-size:16px;
+            margin-top:20px;
+            color:#444;
+            width:80%;
+            line-height:1.8;
+          ">
+            Your account has been registered successfully.
+            <br><br>
+            Please go to the admin to activate your account.
+          </p>
+
+        </div>
+
       </div>
 
     </form>
+
   </div>
+
 </div>
 
+<!-- TERMS MODAL -->
 <div id="termsModal">
+
   <div class="modal-content">
-    <h3 style="color: #8B0000">Terms and Conditions – Facial Data Registration</h3>
-    <p>By registering your face in this system, you agree to the following:</p>
+
+    <h3 style="color:#8B0000">
+      Terms and Conditions – Facial Data Registration
+    </h3>
+
+    <p>
+      By registering your face in this system,
+      you agree to the following:
+    </p>
+
     <ul>
       <li>Your facial data will only be used for attendance verification.</li>
       <li>The system stores only a facial descriptor, not an actual image.</li>
@@ -387,25 +479,19 @@
       <li>This system is strictly for academic attendance monitoring.</li>
       <li>You may request removal of your data from the system.</li>
     </ul>
-    <p>By continuing, you consent to the collection and use of your facial data.</p>
-    <button onclick="closeTerms()">Close</button>
+
+    <p>
+      By continuing, you consent to the collection
+      and use of your facial data.
+    </p>
+
+    <button onclick="closeTerms()">
+      Close
+    </button>
+
   </div>
+
 </div>
 
-<script>
-  function showTerms() {
-    var modal = document.getElementById('termsModal');
-    if (modal) {
-      modal.style.display = 'flex';
-    }
-  }
-
-  function closeTerms() {
-    var modal = document.getElementById('termsModal');
-    if (modal) {
-      modal.style.display = 'none';
-    }
-  }
-</script>
 </body>
 </html>
