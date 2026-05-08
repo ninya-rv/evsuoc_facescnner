@@ -122,8 +122,6 @@ $late    = count(array_filter($attendanceList, fn($a) => $a['status'] == 'Late')
                 <h4>Late</h4>
                 <p><?php echo $late; ?></p>
             </div>
-
-            
         </div>
 
         <div class="student-section">

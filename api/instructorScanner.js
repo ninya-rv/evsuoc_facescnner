@@ -17,10 +17,6 @@ document.addEventListener("DOMContentLoaded", () => {
     let recentScans = {};
 
     if (classSelect) classSelect.disabled = true;
-
-    // =========================
-    // ONLY ONE OUTPUT FUNCTION
-    // =========================
     function setStatus(message) {
         if (!statusDiv) return;
         statusDiv.innerText = message;
@@ -54,9 +50,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!scannerInitialized) initScanner();
     }
 
-    // =========================
-    // MODE BUTTONS
-    // =========================
     timeInBtn?.addEventListener("click", () => {
         scanMode = "time_in";
         setModeButtons(scanMode);
@@ -71,9 +64,6 @@ document.addEventListener("DOMContentLoaded", () => {
         classSelect.disabled = false;
     });
 
-    // =========================
-    // CLASS SELECT
-    // =========================
     function getPHTime() {
         const now = new Date();
         return new Date(now.toLocaleString("en-US", { timeZone: "Asia/Manila" }));
@@ -106,9 +96,6 @@ document.addEventListener("DOMContentLoaded", () => {
         prepareScanner();
     });
 
-    // =========================
-    // FACE API
-    // =========================
     async function loadModels() {
         if (modelsLoaded) return;
 
@@ -166,9 +153,6 @@ document.addEventListener("DOMContentLoaded", () => {
         );
     }
 
-    // =========================
-    // SAVE ATTENDANCE
-    // =========================
     async function saveAttendance(student) {
         if (!selectedClass) return;
 
@@ -208,9 +192,6 @@ document.addEventListener("DOMContentLoaded", () => {
         setStatus("❌ " + result.message);
     }
 
-    // =========================
-    // RECOGNITION LOOP
-    // =========================
     function startRecognition() {
         setStatus("Scanner ready...");
 
@@ -256,9 +237,6 @@ document.addEventListener("DOMContentLoaded", () => {
         scannerInitialized = true;
     }
 
-    // =========================
-    // PROFILE DROPDOWN
-    // =========================
     profileBtn?.addEventListener("click", () => {
         dropdown.style.display =
             dropdown.style.display === "block" ? "none" : "block";

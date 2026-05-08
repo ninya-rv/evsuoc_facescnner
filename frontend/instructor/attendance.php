@@ -72,7 +72,6 @@ if ($subjectResult && mysqli_num_rows($subjectResult) > 0) {
         $subjectList[] = $subjectRow['subject'];
     }
 }
-
 $currentDate = date("Y-m-d");
 $currentTime = date("H:i:s");
 

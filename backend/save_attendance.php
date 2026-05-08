@@ -5,9 +5,6 @@ include "db.php";
 header('Content-Type: application/json');
 date_default_timezone_set('Asia/Manila');
 
-/* =========================
-   AUTH CHECK
-========================= */
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'instructor') {
     echo json_encode([
         "success" => false,
@@ -19,9 +16,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'instructor') {
 
 $instructor_id = $_SESSION['user_id'];
 
-/* =========================
-   GET INSTRUCTOR
-========================= */
 $instructorQuery = "SELECT name FROM users WHERE id='$instructor_id' AND role='instructor' LIMIT 1";
 $instructorResult = mysqli_query($conn, $instructorQuery);
 
@@ -36,9 +30,6 @@ if (!$instructorResult || mysqli_num_rows($instructorResult) == 0) {
 
 $instructor_name = mysqli_fetch_assoc($instructorResult)['name'];
 
-/* =========================
-   INPUT DATA
-========================= */
 $data = json_decode(file_get_contents("php://input"), true);
 
 if (!$data) {

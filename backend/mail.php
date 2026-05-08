@@ -1,28 +1,20 @@
 <?php
-
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
-
 require __DIR__ . '/../vendor/autoload.php';
-
 function sendActivationEmail($toEmail, $name) {
-
     $mail = new PHPMailer(true);
-
     try {
-        // SMTP CONFIG
         $mail->isSMTP();
         $mail->Host = 'smtp.gmail.com';
         $mail->SMTPAuth = true;
 
-        // ⚠️ Gmail account
         $mail->Username = 'aprilsheen.pinar@evsu.edu.ph';
         $mail->Password = 'wssp qafe fxlb xczw';
 
         $mail->SMTPSecure = 'tls';
         $mail->Port = 587;
 
-        // SENDER
         $mail->setFrom('evsuoccadmin@gmail.com', 'EVSU BSIT System');
         $mail->addAddress($toEmail, $name);
 
@@ -45,19 +37,15 @@ function sendActivationEmail($toEmail, $name) {
                 <div style='margin-top:15px;padding:10px;background:#f8f8f8;border-left:5px solid #800000'>
                     <p style='margin:0'><b>Status:</b> Active</p>
                 </div>
-
                 <br>
-
                 <p style='font-size:12px;color:gray'>
                     This is an automated message from EVSU Face Recognition Attendance System.
                 </p>
 
             </div>
         </div>";
-
         $mail->send();
         return true;
-
     } catch (Exception $e) {
         return false;
     }

@@ -546,15 +546,10 @@ document.addEventListener("click", function(e) {
 const downloadPDF = document.getElementById("downloadPDF");
 
 downloadPDF.addEventListener("click", () => {
-
     const { jsPDF } = window.jspdf;
-
     const doc = new jsPDF();
-
     let tableData = [];
-
     const rows = document.querySelectorAll("#userTable tr");
-
     rows.forEach(row => {
         if (row.style.display !== "none") {
 
@@ -572,11 +567,8 @@ downloadPDF.addEventListener("click", () => {
             }
         }
     });
-
     doc.setFontSize(16);
-
     doc.text("Student List", 14, 15);
-
     doc.autoTable({
         startY: 25,
 
@@ -600,7 +592,6 @@ downloadPDF.addEventListener("click", () => {
             fontSize: 10
         }
     });
-
     doc.save("filtered_students.pdf");
 });
 </script>

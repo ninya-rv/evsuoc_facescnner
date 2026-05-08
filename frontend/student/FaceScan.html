@@ -4,10 +4,8 @@
 <meta charset="UTF-8" />
 <title>Student Registration - Face Capture</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
 <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 <script defer src="/api/faceid.js"></script>
-
 <style>
   body {
     font-family: Arial, sans-serif;
@@ -288,23 +286,16 @@
   }
 </style>
 </head>
-
 <body>
-
 <div class="container">
-
   <div class="left">
     <img src="/css/face-recognition.png"
          alt="Profile Icon"
          class="profile-icon" />
   </div>
-
   <div class="right">
-
     <h2>REGISTER</h2>
-
     <div class="step-indicator">
-
       <div class="step active" id="step1-indicator">
         <div class="step-number">1</div>
         <div class="step-label">Information</div>
@@ -319,12 +310,8 @@
         <div class="step-number">3</div>
         <div class="step-label">Complete</div>
       </div>
-
     </div>
-
     <form id="registrationForm">
-
-      <!-- STEP 1 -->
       <div class="step-content active" id="step1-content">
 
         <div class="form-section">
@@ -386,7 +373,6 @@
 
       </div>
 
-      <!-- STEP 2 -->
       <div class="step-content" id="step2-content">
 
         <div class="form-section">
@@ -423,7 +409,6 @@
 
       </div>
 
-      <!-- STEP 3 -->
       <div class="step-content" id="step3-content">
 
         <div class="form-section">
@@ -458,20 +443,15 @@
 
 </div>
 
-<!-- TERMS MODAL -->
 <div id="termsModal">
-
   <div class="modal-content">
-
     <h3 style="color:#8B0000">
       Terms and Conditions – Facial Data Registration
     </h3>
-
     <p>
       By registering your face in this system,
       you agree to the following:
     </p>
-
     <ul>
       <li>Your facial data will only be used for attendance verification.</li>
       <li>The system stores only a facial descriptor, not an actual image.</li>
@@ -479,19 +459,14 @@
       <li>This system is strictly for academic attendance monitoring.</li>
       <li>You may request removal of your data from the system.</li>
     </ul>
-
     <p>
       By continuing, you consent to the collection
       and use of your facial data.
     </p>
-
     <button onclick="closeTerms()">
       Close
     </button>
-
   </div>
-
 </div>
-
 </body>
 </html>

@@ -10,10 +10,8 @@ $name = mysqli_real_escape_string($conn, $_POST['name']);
 $email = mysqli_real_escape_string($conn, $_POST['email']);
 $password = mysqli_real_escape_string($conn, $_POST['password']);
 
-/* AUTO ROLE */
 $role = "instructor";
 
-/* HASH PASSWORD */
 $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
 $check = "SELECT * FROM users WHERE email='$email'";
