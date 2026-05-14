@@ -4,14 +4,12 @@
     {
       "src": "*.php",
       "use": "@vercel/php"
-    },
+    }
+  ],
+  "routes": [
     {
-      "src": "backend/*.php",
-      "use": "@vercel/php"
-    },
-    {
-      "src": "frontend/**/*.php",
-      "use": "@vercel/php"
+      "src": "/(.*)",
+      "dest": "/index.php"
     }
   ]
 }
