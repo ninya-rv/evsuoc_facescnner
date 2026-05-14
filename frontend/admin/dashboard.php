@@ -3,68 +3,83 @@ session_start();
 include "../../backend/db.php";
 
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
-    header("Location: /frontend/sign_in.html");
+    header("Location: /frontend/sign_in.php");
     exit;
 }
-include "../../backend/mail.php";
 
+include "../../backend/mail.php";
 if (isset($_GET['toggle']) && isset($_GET['id'])) {
 
-    $student_id = mysqli_real_escape_string($conn, $_GET['id']);
+    $student_id = pg_escape_string($conn, $_GET['id']);
 
-    $checkStudent = mysqli_query($conn, "
+    $checkStudent = pg_query($conn, "
         SELECT status, email, name
-        FROM students 
+        FROM students
         WHERE student_id='$student_id'
     ");
 
-    if ($checkStudent && mysqli_num_rows($checkStudent) > 0) {
+    if ($checkStudent && pg_num_rows($checkStudent) > 0) {
 
-        $student = mysqli_fetch_assoc($checkStudent);
+        $student = pg_fetch_assoc($checkStudent);
 
-        $newStatus = ($student['status'] === 'Active') ? 'Inactive' : 'Active';
+        $newStatus = ($student['status'] === 'Active')
+            ? 'Inactive'
+            : 'Active';
 
-        mysqli_query($conn, "
+        pg_query($conn, "
             UPDATE students
             SET status='$newStatus'
             WHERE student_id='$student_id'
         ");
 
         if ($newStatus === 'Active') {
-            sendActivationEmail($student['email'], $student['name']);
+            sendActivationEmail(
+                $student['email'],
+                $student['name']
+            );
         }
     }
 
     header("Location: dashboard.php");
     exit;
 }
-
 $adminName = trim($_SESSION['name'] ?? '');
 $adminInitials = 'SA';
 
 if ($adminName !== '') {
+
     $nameParts = preg_split('/\s+/', $adminName);
 
     if (count($nameParts) > 1) {
+
         $adminInitials = strtoupper(
             substr($nameParts[0], 0, 1) .
             substr(end($nameParts), 0, 1)
         );
+
     } else {
-        $adminInitials = strtoupper(substr($nameParts[0], 0, 2));
+
+        $adminInitials = strtoupper(
+            substr($nameParts[0], 0, 2)
+        );
     }
 }
 
-$adminEmail = $_SESSION['email'] ?? 'aprilsheen.pinar@evsu.edu.ph';
-
-
+$adminEmail =
+    $_SESSION['email']
+    ?? 'admin@evsu.edu.ph';
 $totalStudentsQuery = "
-    SELECT COUNT(*) as total 
+    SELECT COUNT(*) as total
     FROM students
 ";
 
-$totalStudents = mysqli_fetch_assoc(
-    mysqli_query($conn, $totalStudentsQuery)
+$totalStudentsResult = pg_query(
+    $conn,
+    $totalStudentsQuery
+);
+
+$totalStudents = pg_fetch_assoc(
+    $totalStudentsResult
 )['total'];
 
 $activeQuery = "
@@ -73,8 +88,13 @@ $activeQuery = "
     WHERE status='Active'
 ";
 
-$activeStudents = mysqli_fetch_assoc(
-    mysqli_query($conn, $activeQuery)
+$activeResult = pg_query(
+    $conn,
+    $activeQuery
+);
+
+$activeStudents = pg_fetch_assoc(
+    $activeResult
 )['total'];
 
 $inactiveQuery = "
@@ -83,10 +103,14 @@ $inactiveQuery = "
     WHERE status='Inactive'
 ";
 
-$inactiveStudents = mysqli_fetch_assoc(
-    mysqli_query($conn, $inactiveQuery)
-)['total'];
+$inactiveResult = pg_query(
+    $conn,
+    $inactiveQuery
+);
 
+$inactiveStudents = pg_fetch_assoc(
+    $inactiveResult
+)['total'];
 $combinedQuery = "
     SELECT
         student_id AS id,
@@ -99,11 +123,11 @@ $combinedQuery = "
     ORDER BY name ASC
 ";
 
-$result = mysqli_query($conn, $combinedQuery);
+$result = pg_query($conn, $combinedQuery);
 
 $combinedList = [];
 
-while ($row = mysqli_fetch_assoc($result)) {
+while ($row = pg_fetch_assoc($result)) {
     $combinedList[] = $row;
 }
 ?>
@@ -167,9 +191,7 @@ while ($row = mysqli_fetch_assoc($result)) {
 
     </style>
 </head>
-
 <body>
-
 <header class="header">
 
     <div class="logo-title">
@@ -202,7 +224,7 @@ while ($row = mysqli_fetch_assoc($result)) {
             </div>
 
             <div class="profile-actions">
-                <a href="../sign_in.html">
+                <a href="../../index.php">
                     <i class="fa-solid fa-right-from-bracket"></i>
                     Logout
                 </a>

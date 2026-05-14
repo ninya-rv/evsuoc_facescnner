@@ -1,12 +1,20 @@
 <?php
-$host = "localhost";
-$user = "root";
-$password = "";
-$database = "class_attendance";
+$host = "aws-1-ap-southeast-1.pooler.supabase.com";
+$port = "6543";
+$dbname = "postgres";
+$user = "postgres.znjyxpbotlfyyxrykoeb";
+$password = "evsuOCCscanner";
 
-$conn = mysqli_connect($host, $user, $password, $database);
+$conn = pg_connect("
+    host=$host
+    port=$port
+    dbname=$dbname
+    user=$user
+    password=$password
+    sslmode=require
+");
 
 if (!$conn) {
-    die("Connection failed: " . mysqli_connect_error());
+    die("Connection failed: " . pg_last_error());
 }
 ?>

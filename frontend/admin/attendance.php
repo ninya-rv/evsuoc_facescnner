@@ -3,33 +3,66 @@ session_start();
 include "../../backend/db.php";
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    header("Location: ../sign_in.html");
+    header("Location: ../sign_in.php");
     exit;
 }
-
 $adminName = trim($_SESSION['name'] ?? '');
+
 $adminInitials = 'SA';
+
 if ($adminName !== '') {
+
     $nameParts = preg_split('/\s+/', $adminName);
+
     if (count($nameParts) > 1) {
-        $adminInitials = strtoupper(substr($nameParts[0], 0, 1) . substr(end($nameParts), 0, 1));
+
+        $adminInitials = strtoupper(
+            substr($nameParts[0], 0, 1) .
+            substr(end($nameParts), 0, 1)
+        );
+
     } else {
-        $adminInitials = strtoupper(substr($nameParts[0], 0, 2));
+
+        $adminInitials = strtoupper(
+            substr($nameParts[0], 0, 2)
+        );
     }
 }
-$adminEmail = $_SESSION['email'] ?? 'admin@evsu.edu.ph';
 
-$attendanceQuery = "SELECT * FROM attendance ORDER BY date DESC, time_in DESC";
-$attendanceResult = mysqli_query($conn, $attendanceQuery);
+$adminEmail =
+    $_SESSION['email']
+    ?? 'admin@evsu.edu.ph';
+$attendanceQuery = "
+    SELECT *
+    FROM attendance
+    ORDER BY date DESC, time_in DESC
+";
+
+$attendanceResult = pg_query(
+    $conn,
+    $attendanceQuery
+);
 
 $attendanceList = [];
-while ($row = mysqli_fetch_assoc($attendanceResult)) {
+
+while ($row = pg_fetch_assoc($attendanceResult)) {
+
     $attendanceList[] = $row;
 }
+$present = count(array_filter(
+    $attendanceList,
+    fn($a) => $a['status'] == 'Present'
+));
 
-$present = count(array_filter($attendanceList, fn($a) => $a['status'] == 'Present'));
-$absent  = count(array_filter($attendanceList, fn($a) => $a['status'] == 'Absent'));
-$late    = count(array_filter($attendanceList, fn($a) => $a['status'] == 'Late'));
+$absent = count(array_filter(
+    $attendanceList,
+    fn($a) => $a['status'] == 'Absent'
+));
+
+$late = count(array_filter(
+    $attendanceList,
+    fn($a) => $a['status'] == 'Late'
+));
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -62,7 +95,7 @@ $late    = count(array_filter($attendanceList, fn($a) => $a['status'] == 'Late')
             </div>
 
             <div class="profile-actions">
-                <a href="../sign_in.html">
+                <a href="../../index.php">
                     <i class="fa-solid fa-right-from-bracket"></i> Logout
                 </a>
             </div>

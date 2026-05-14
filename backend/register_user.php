@@ -1,55 +1,68 @@
 <?php
-include "db.php";
+session_start();
+include "../../backend/db.php";
 
-header('Content-Type: application/json');
-
-$data = json_decode(file_get_contents("php://input"), true);
-
-if (!$data) {
-    echo json_encode([
-        "success" => false,
-        "message" => "Invalid request."
-    ]);
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+    header("Location: ../sign_in.html");
     exit;
 }
 
-$name = mysqli_real_escape_string($conn, $data['name']);
-$email = mysqli_real_escape_string($conn, $data['email']);
-$password = mysqli_real_escape_string($conn, $data['password']);
+$adminName = trim($_SESSION['name'] ?? '');
+$adminInitials = 'SA';
 
-$role = isset($data['role']) ? mysqli_real_escape_string($conn, $data['role']) : 'instructor';
+if ($adminName !== '') {
+    $nameParts = preg_split('/\s+/', $adminName);
 
-if ($role === 'admin') {
-    echo json_encode([
-        "success" => false,
-        "message" => "Admin account cannot be created here."
-    ]);
-    exit;
+    if (count($nameParts) > 1) {
+        $adminInitials = strtoupper(
+            substr($nameParts[0], 0, 1) .
+            substr(end($nameParts), 0, 1)
+        );
+    } else {
+        $adminInitials = strtoupper(substr($nameParts[0], 0, 2));
+    }
 }
 
-$check = "SELECT * FROM users WHERE email='$email'";
-$result = mysqli_query($conn, $check);
+$adminEmail = $_SESSION['email'] ?? 'admin@evsu.edu.ph';
 
-if (mysqli_num_rows($result) > 0) {
-    echo json_encode([
-        "success" => false,
-        "message" => "Email already exists."
-    ]);
-    exit;
-}
 
-$sql = "INSERT INTO users (name, email, password, role, status)
-        VALUES ('$name', '$email', '$password', '$role', 'inactive')";
+$totalUsersQuery = "
+    SELECT COUNT(*) as total
+    FROM users
+    WHERE role = 'instructor'
+";
 
-if (mysqli_query($conn, $sql)) {
-    echo json_encode([
-        "success" => true,
-        "message" => "Account created. Waiting for admin approval."
-    ]);
-} else {
-    echo json_encode([
-        "success" => false,
-        "message" => "Registration failed."
-    ]);
-}
+$totalResult = pg_query($conn, $totalUsersQuery);
+
+$totalRow = pg_fetch_assoc($totalResult);
+
+$totalUsers = $totalRow['total'];
+
+
+$activeUsersQuery = "
+    SELECT COUNT(*) as active
+    FROM users
+    WHERE role = 'instructor'
+    AND status='active'
+";
+
+$activeResult = pg_query($conn, $activeUsersQuery);
+
+$activeRow = pg_fetch_assoc($activeResult);
+
+$activeUsers = $activeRow['active'];
+
+
+$inactiveUsersQuery = "
+    SELECT COUNT(*) as inactive
+    FROM users
+    WHERE role = 'instructor'
+    AND status='inactive'
+";
+
+$inactiveResult = pg_query($conn, $inactiveUsersQuery);
+
+$inactiveRow = pg_fetch_assoc($inactiveResult);
+
+$inactiveUsers = $inactiveRow['inactive'];
 ?>

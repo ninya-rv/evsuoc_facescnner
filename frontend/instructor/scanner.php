@@ -2,7 +2,6 @@
 session_start();
 include "../../backend/db.php";
 
-
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../sign_in.html");
     exit;
@@ -14,39 +13,59 @@ if ($_SESSION['role'] !== 'instructor') {
 }
 
 date_default_timezone_set('Asia/Manila');
+
 $instructor_id = $_SESSION['user_id'];
 
 $manilaNow = new DateTime('now', new DateTimeZone('Asia/Manila'));
 $currentDate = $manilaNow->format('Y-m-d');
 
-$instructorQuery = "SELECT name, email FROM users WHERE id = '$instructor_id' AND role = 'instructor' LIMIT 1";
-$instructorResult = mysqli_query($conn, $instructorQuery);
+$instructorQuery = "
+    SELECT name, email
+    FROM users
+    WHERE id = '$instructor_id'
+    AND role = 'instructor'
+    LIMIT 1
+";
 
-if ($instructorResult && mysqli_num_rows($instructorResult) > 0) {
-    $instructorData = mysqli_fetch_assoc($instructorResult);
+$instructorResult = pg_query($conn, $instructorQuery);
+
+if ($instructorResult && pg_num_rows($instructorResult) > 0) {
+
+    $instructorData = pg_fetch_assoc($instructorResult);
+
     $instructorName = $instructorData['name'];
     $instructorEmail = $instructorData['email'];
 
     $nameParts = explode(" ", trim($instructorName));
+
     $initials = "";
+
     foreach ($nameParts as $part) {
+
         $initials .= strtoupper(substr($part, 0, 1));
-        if (strlen($initials) >= 2) break;
+
+        if (strlen($initials) >= 2) {
+            break;
+        }
     }
+
 } else {
+
     $instructorName = "Instructor";
     $instructorEmail = "No email found";
     $initials = "IN";
 }
 
-$instructor_name = $instructorName;
+$instructor_name = pg_escape_string($conn, $instructorName);
 
+$classQuery = "
+    SELECT *
+    FROM instructor_assignment
+    WHERE instructor_name = '$instructor_name'
+    ORDER BY start_time ASC
+";
 
-$classQuery = "SELECT * FROM instructor_assignment 
-               WHERE instructor_name = '$instructor_name'
-               ORDER BY start_time ASC";
-
-$classResult = mysqli_query($conn, $classQuery);
+$classResult = pg_query($conn, $classQuery);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -82,7 +101,7 @@ $classResult = mysqli_query($conn, $classQuery);
             
 
             <div class="profile-actions">
-                <a href="../sign_in.html">
+                <a href="../../index.php">
                     <i class="fa-solid fa-right-from-bracket"></i> Logout
                 </a>
             </div>
@@ -138,8 +157,8 @@ $classResult = mysqli_query($conn, $classQuery);
             <select id="classSelect" required disabled>
                 <option value="">Select your class assignment</option>
 
-                <?php if ($classResult && mysqli_num_rows($classResult) > 0): ?>
-                    <?php while ($class = mysqli_fetch_assoc($classResult)): ?>
+                <?php if ($classResult && pg_num_rows($classResult) > 0): ?>
+                    <?php while ($class = pg_fetch_assoc($classResult)): ?>
                         <?php 
                     $classEndTimestamp = strtotime($currentDate . ' ' . $class['end_time']);
                     $isEnded = $classEndTimestamp < $manilaNow->getTimestamp();

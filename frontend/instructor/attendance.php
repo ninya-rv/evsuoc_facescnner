@@ -17,18 +17,18 @@ if ($_SESSION['role'] !== 'instructor') {
 $instructor_id = $_SESSION['user_id'];
 
 $instructorQuery = "
-    SELECT name, email 
-    FROM users 
-    WHERE id = '$instructor_id' 
-    AND role = 'instructor' 
+    SELECT name, email
+    FROM users
+    WHERE id = '$instructor_id'
+    AND role = 'instructor'
     LIMIT 1
 ";
 
-$instructorResult = mysqli_query($conn, $instructorQuery);
+$instructorResult = pg_query($conn, $instructorQuery);
 
-if ($instructorResult && mysqli_num_rows($instructorResult) > 0) {
+if ($instructorResult && pg_num_rows($instructorResult) > 0) {
 
-    $instructorData = mysqli_fetch_assoc($instructorResult);
+    $instructorData = pg_fetch_assoc($instructorResult);
 
     $instructorName  = $instructorData['name'];
     $instructorEmail = $instructorData['email'];
@@ -53,7 +53,7 @@ if ($instructorResult && mysqli_num_rows($instructorResult) > 0) {
     $initials        = 'IN';
 }
 
-$instructor_name = mysqli_real_escape_string($conn, $instructorName);
+$instructor_name = pg_escape_string($conn, $instructorName);
 
 $subjectQuery = "
     SELECT DISTINCT subject
@@ -62,16 +62,17 @@ $subjectQuery = "
     ORDER BY subject ASC
 ";
 
-$subjectResult = mysqli_query($conn, $subjectQuery);
+$subjectResult = pg_query($conn, $subjectQuery);
 
 $subjectList = [];
 
-if ($subjectResult && mysqli_num_rows($subjectResult) > 0) {
+if ($subjectResult && pg_num_rows($subjectResult) > 0) {
 
-    while ($subjectRow = mysqli_fetch_assoc($subjectResult)) {
+    while ($subjectRow = pg_fetch_assoc($subjectResult)) {
         $subjectList[] = $subjectRow['subject'];
     }
 }
+
 $currentDate = date("Y-m-d");
 $currentTime = date("H:i:s");
 
@@ -81,13 +82,13 @@ $assignmentQuery = "
     WHERE instructor_name = '$instructor_name'
 ";
 
-$assignmentResult = mysqli_query($conn, $assignmentQuery);
+$assignmentResult = pg_query($conn, $assignmentQuery);
 
-while ($assignment = mysqli_fetch_assoc($assignmentResult)) {
+while ($assignment = pg_fetch_assoc($assignmentResult)) {
 
-    $subject    = mysqli_real_escape_string($conn, $assignment['subject']);
-    $year_level = mysqli_real_escape_string($conn, $assignment['year_level']);
-    $section    = mysqli_real_escape_string($conn, $assignment['section']);
+    $subject    = pg_escape_string($conn, $assignment['subject']);
+    $year_level = pg_escape_string($conn, $assignment['year_level']);
+    $section    = pg_escape_string($conn, $assignment['section']);
     $end_time   = $assignment['end_time'];
 
     if ($currentTime >= $end_time) {
@@ -95,18 +96,18 @@ while ($assignment = mysqli_fetch_assoc($assignmentResult)) {
         $studentQuery = "
             SELECT *
             FROM students
-            WHERE status = 'Active'
+            WHERE status = 'active'
             AND year = '$year_level'
             AND section = '$section'
         ";
 
-        $studentResult = mysqli_query($conn, $studentQuery);
+        $studentResult = pg_query($conn, $studentQuery);
 
-        while ($student = mysqli_fetch_assoc($studentResult)) {
+        while ($student = pg_fetch_assoc($studentResult)) {
 
-            $student_id = mysqli_real_escape_string($conn, $student['student_id']);
-            $name       = mysqli_real_escape_string($conn, $student['name']);
-            $email      = mysqli_real_escape_string($conn, $student['email']);
+            $student_id = pg_escape_string($conn, $student['student_id']);
+            $name       = pg_escape_string($conn, $student['name']);
+            $email      = pg_escape_string($conn, $student['email']);
 
             $checkAttendance = "
                 SELECT id
@@ -117,9 +118,9 @@ while ($assignment = mysqli_fetch_assoc($assignmentResult)) {
                 LIMIT 1
             ";
 
-            $checkResult = mysqli_query($conn, $checkAttendance);
+            $checkResult = pg_query($conn, $checkAttendance);
 
-            if (mysqli_num_rows($checkResult) == 0) {
+            if (pg_num_rows($checkResult) == 0) {
 
                 $insertAbsent = "
                     INSERT INTO attendance (
@@ -150,7 +151,7 @@ while ($assignment = mysqli_fetch_assoc($assignmentResult)) {
                     )
                 ";
 
-                mysqli_query($conn, $insertAbsent);
+                pg_query($conn, $insertAbsent);
             }
         }
     }
@@ -163,11 +164,11 @@ $attendanceQuery = "
     ORDER BY date DESC, time_in DESC
 ";
 
-$attendanceResult = mysqli_query($conn, $attendanceQuery);
+$attendanceResult = pg_query($conn, $attendanceQuery);
 
 $attendanceList = [];
 
-while ($row = mysqli_fetch_assoc($attendanceResult)) {
+while ($row = pg_fetch_assoc($attendanceResult)) {
     $attendanceList[] = $row;
 }
 
@@ -215,7 +216,7 @@ $late = count(array_filter(
             </div>
 
             <div class="profile-actions">
-                <a href="../sign_in.html">
+                <a href="../../index.php">
                     <i class="fa-solid fa-right-from-bracket"></i> Logout
                 </a>
             </div>

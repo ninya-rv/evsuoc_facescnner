@@ -121,7 +121,15 @@ document.addEventListener("DOMContentLoaded", () => {
         setStatus("Loading students...");
 
         const res = await fetch("/backend/get_student.php");
-        const students = await res.json();
+        const response = await res.json();
+
+        const students = response.students || [];
+
+        if (!Array.isArray(students) || students.length === 0) {
+            setStatus("No students found");
+            faceMatcher = null;
+            return;
+        }
 
         const labeled = students.map(s => {
             const descriptor = Array.isArray(s.face_descriptor)
@@ -137,16 +145,19 @@ document.addEventListener("DOMContentLoaded", () => {
         }).filter(Boolean);
 
         if (!labeled.length) {
-            setStatus("No students found");
+            setStatus("No valid face data");
+            faceMatcher = null;
             return;
         }
 
         faceMatcher = new faceapi.FaceMatcher(labeled, 0.6);
+        setStatus("Students loaded successfully");
     }
 
     async function getStudentByLabel(label) {
         const res = await fetch("/backend/get_student.php");
-        const students = await res.json();
+        const response = await res.json();
+        const students = response.students || [];
 
         return students.find(
             s => `${s.name} ${s.student_id}` === label

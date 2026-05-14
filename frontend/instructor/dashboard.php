@@ -6,6 +6,7 @@ if(!isset($_SESSION['user_id'])){
     header("Location: ../sign_in.html");
     exit;
 }
+
 if($_SESSION['role'] !== 'instructor'){
     header("Location: ../sign_in.html");
     exit;
@@ -13,65 +14,98 @@ if($_SESSION['role'] !== 'instructor'){
 
 $instructor_id = $_SESSION['user_id'];
 
-$instructorQuery = "SELECT name, email FROM users WHERE id = '$instructor_id' AND role = 'instructor' LIMIT 1";
-$instructorResult = mysqli_query($conn, $instructorQuery);
+$instructorQuery = pg_query_params(
+    $conn,
+    "SELECT name, email 
+     FROM users 
+     WHERE id = $1 
+     AND role = 'instructor' 
+     LIMIT 1",
+    [$instructor_id]
+);
 
-if ($instructorResult && mysqli_num_rows($instructorResult) > 0) {
-    $instructorData = mysqli_fetch_assoc($instructorResult);
+if ($instructorQuery && pg_num_rows($instructorQuery) > 0) {
+
+    $instructorData = pg_fetch_assoc($instructorQuery);
+
     $instructorName = $instructorData['name'];
     $instructorEmail = $instructorData['email'];
 
     $nameParts = explode(" ", trim($instructorName));
+
     $initials = "";
+
     foreach ($nameParts as $part) {
+
         $initials .= strtoupper(substr($part, 0, 1));
-        if (strlen($initials) >= 2) break;
+
+        if(strlen($initials) >= 2){
+            break;
+        }
     }
+
 } else {
+
     $instructorName = "Instructor";
     $instructorEmail = "No email found";
     $initials = "IN";
 }
+
 $assignedStudents = [];
 $totalStudents = 0;
 $activeStudents = 0;
 $inactiveStudents = 0;
 
-$assignmentQuery = "SELECT DISTINCT year_level, section 
-                    FROM instructor_assignment 
-                    WHERE instructor_name = '".mysqli_real_escape_string($conn, $instructorName)."'";
-
-$assignmentResult = mysqli_query($conn, $assignmentQuery);
+$assignmentQuery = pg_query_params(
+    $conn,
+    "SELECT DISTINCT year_level, section
+     FROM instructor_assignment
+     WHERE instructor_name = $1",
+    [$instructorName]
+);
 
 $conditions = [];
 
-if ($assignmentResult && mysqli_num_rows($assignmentResult) > 0) {
-    while ($assignment = mysqli_fetch_assoc($assignmentResult)) {
-        $year = mysqli_real_escape_string($conn, $assignment['year_level']);
-        $section = mysqli_real_escape_string($conn, $assignment['section']);
+if ($assignmentQuery && pg_num_rows($assignmentQuery) > 0) {
 
-        $conditions[] = "(year = '$year' AND section = '$section')";
+    while ($assignment = pg_fetch_assoc($assignmentQuery)) {
+
+        $year = pg_escape_string($conn, $assignment['year_level']);
+        $section = pg_escape_string($conn, $assignment['section']);
+
+        $conditions[] = "(year = '{$year}' AND section = '{$section}')";
     }
 }
 
 if (!empty($conditions)) {
-    $studentQuery = "SELECT * FROM students 
-                     WHERE " . implode(" OR ", $conditions) . "
-                     ORDER BY year ASC, section ASC, name ASC";
 
-    $studentResult = mysqli_query($conn, $studentQuery);
+    $studentQueryString = "
+        SELECT *
+        FROM students
+        WHERE " . implode(" OR ", $conditions) . "
+        ORDER BY year ASC, section ASC, name ASC
+    ";
+
+    $studentResult = pg_query($conn, $studentQueryString);
 
     if ($studentResult) {
-        while ($student = mysqli_fetch_assoc($studentResult)) {
+
+        while ($student = pg_fetch_assoc($studentResult)) {
+
             $assignedStudents[] = $student;
+
             $totalStudents++;
+
             if (isset($student['status'])) {
+
                 if (strtolower($student['status']) === 'active') {
                     $activeStudents++;
                 } else {
                     $inactiveStudents++;
                 }
+
             } else {
+
                 $activeStudents++;
             }
         }
@@ -107,7 +141,7 @@ if (!empty($conditions)) {
             </div>
 
             <div class="profile-actions">
-                <a href="../sign_in.html">
+                <a href="../../index.php">
                     <i class="fa-solid fa-right-from-bracket"></i> Logout
                 </a>
             </div>

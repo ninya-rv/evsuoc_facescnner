@@ -1,30 +1,69 @@
 <?php
 include "db.php";
 
-if(isset($_POST['assign'])){
-    $id = $_POST['edit_id']; 
-    $instructor = $_POST['instructor_name'];
-    $year = $_POST['year_level'];
-    $section = $_POST['section'];
-    $subject = $_POST['subject'];
-    $room = $_POST['room'];
-    $start = $_POST['start_time'];
-    $end = $_POST['end_time'];
+if (isset($_POST['assign'])) {
 
-    if(!empty($id)){
-        $sql = "UPDATE instructor_assignment 
-                SET instructor_name='$instructor', year_level='$year', section='$section', subject='$subject', room='$room', start_time='$start', end_time='$end' 
-                WHERE id=$id";
+    $id = trim($_POST['edit_id'] ?? '');
+
+    $instructor = pg_escape_string($conn, $_POST['instructor_name']);
+    $year = pg_escape_string($conn, $_POST['year_level']);
+    $section = pg_escape_string($conn, $_POST['section']);
+    $subject = pg_escape_string($conn, $_POST['subject']);
+    $room = pg_escape_string($conn, $_POST['room']);
+    $start = pg_escape_string($conn, $_POST['start_time']);
+    $end = pg_escape_string($conn, $_POST['end_time']);
+
+    if (!empty($id)) {
+
+        $id = (int)$id;
+
+        $sql = "
+            UPDATE instructor_assignment
+            SET
+                instructor_name = '$instructor',
+                year_level = '$year',
+                section = '$section',
+                subject = '$subject',
+                room = '$room',
+                start_time = '$start',
+                end_time = '$end'
+            WHERE id = $id
+        ";
+
     } else {
-        $sql = "INSERT INTO instructor_assignment (instructor_name, year_level, section, subject, room, start_time, end_time)
-                VALUES ('$instructor','$year','$section','$subject','$room','$start','$end')";
+
+        $sql = "
+            INSERT INTO instructor_assignment (
+                instructor_name,
+                year_level,
+                section,
+                subject,
+                room,
+                start_time,
+                end_time
+            )
+            VALUES (
+                '$instructor',
+                '$year',
+                '$section',
+                '$subject',
+                '$room',
+                '$start',
+                '$end'
+            )
+        ";
     }
 
-    if(mysqli_query($conn, $sql)){
+    $result = pg_query($conn, $sql);
+
+    if ($result) {
+
         header("Location: ../frontend/admin/instructor_assignment.php");
         exit();
+
     } else {
-        echo "Error: " . mysqli_error($conn);
+
+        echo "Database Error: " . pg_last_error($conn);
     }
 }
 ?>

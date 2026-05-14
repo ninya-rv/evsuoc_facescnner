@@ -1,11 +1,30 @@
 <?php
+session_start();
 include "db.php";
 
-$id = $_GET['id'];
-$status = $_GET['status'];
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+    die("Access denied.");
+}
 
-$sql = "UPDATE users SET status='$status' WHERE id='$id'";
-mysqli_query($conn,$sql);
+$id = pg_escape_string($conn, $_GET['id']);
+$status = pg_escape_string($conn, $_GET['status']);
 
-header("Location: ../frontend/admin/users.php");
+$sql = "
+    UPDATE users
+    SET status='$status'
+    WHERE id='$id'
+";
+
+$result = pg_query($conn, $sql);
+
+if ($result) {
+
+    header("Location: ../frontend/admin/users.php");
+    exit;
+
+} else {
+
+    die("Failed to update status.");
+
+}
 ?>
