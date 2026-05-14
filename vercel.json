@@ -13,11 +13,5 @@
       "src": "frontend/**/*.php",
       "use": "@vercel/php"
     }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
-    }
   ]
 }
