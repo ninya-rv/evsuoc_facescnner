@@ -1,5 +1,5 @@
 <?php
-include "db.php";
+include "../evsuoc_facescnner/backend/db.php";
 
 if ($conn) {
     echo "DB CONNECTED SUCCESSFULLY";
