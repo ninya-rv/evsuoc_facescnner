@@ -1,6 +1,5 @@
 {
     "require": {
-        "phpmailer/phpmailer": "^7.0",
-        "vercel/php": "*"
+        "phpmailer/phpmailer": "^7.0"
     }
 }
