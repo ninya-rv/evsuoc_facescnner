@@ -26,7 +26,7 @@ function sendActivationEmail($toEmail, $name)
         $mail->SMTPSecure =
             PHPMailer::ENCRYPTION_STARTTLS;
 
-        $mail->Port = 587;
+        $mail->Port = 465;
 
         // DEBUG
         $mail->SMTPDebug = 2;
