@@ -18,11 +18,10 @@ function sendActivationEmail($toEmail, $name)
 
         $mail->SMTPAuth = true;
 
-        // YOUR EMAIL
-        $mail->Username = 'aprilsheen.pinar@evsu.edu.ph';
+        // RAILWAY VARIABLES
+        $mail->Username = getenv('aprilsheen.pinar@evsu.edu.ph');
 
-        // YOUR GMAIL APP PASSWORD
-        $mail->Password = 'wsspqafefxlbxczw';
+        $mail->Password = getenv('wsspqafefxlbxczw');
 
         $mail->SMTPSecure =
             PHPMailer::ENCRYPTION_STARTTLS;
@@ -36,7 +35,7 @@ function sendActivationEmail($toEmail, $name)
 
         // SENDER
         $mail->setFrom(
-            'aprilsheen.pinar@evsu.edu.ph',
+            getenv('aprilsheen.pinar@evsu.edu.ph'),
             'EVSU BSIT System'
         );
 
