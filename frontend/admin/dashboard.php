@@ -72,25 +72,23 @@ if (
 
             if (!$emailSent) {
 
-                echo "
-                <script>
-                    alert('Email failed to send.');
-                </script>
-                ";
+                error_log(
+                    "Email failed to send to: " .
+                    $student['email']
+                );
 
             } else {
 
-                echo "
-                <script>
-                    alert('Email sent successfully.');
-                </script>
-                ";
+                error_log(
+                    "Email sent successfully to: " .
+                    $student['email']
+                );
             }
         }
     }
 
     // REDIRECT
-    header("Refresh:2; url=dashboard.php");
+    header("Location: dashboard.php");
     exit;
 }
 

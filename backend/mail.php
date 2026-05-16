@@ -11,20 +11,18 @@ function sendActivationEmail($toEmail, $name)
 
     try {
 
-        error_reporting(E_ALL);
-        ini_set('display_errors', 1);
-
-        // SMTP
+        // SMTP SETTINGS
         $mail->isSMTP();
 
         $mail->Host = 'smtp.gmail.com';
 
         $mail->SMTPAuth = true;
 
-        // RAILWAY VARIABLES
-        $mail->Username = getenv('aprilsheen.pinar@evsu.edu.ph');
+        // YOUR EMAIL
+        $mail->Username = 'aprilsheen.pinar@evsu.edu.ph';
 
-        $mail->Password = getenv('wsspqafefxlbxczw');
+        // YOUR GMAIL APP PASSWORD
+        $mail->Password = 'wsspqafefxlbxczw';
 
         $mail->SMTPSecure =
             PHPMailer::ENCRYPTION_STARTTLS;
@@ -36,13 +34,13 @@ function sendActivationEmail($toEmail, $name)
 
         $mail->Debugoutput = 'error_log';
 
-        // FROM
+        // SENDER
         $mail->setFrom(
-            getenv('aprilsheen.pinar@evsu.edu.ph'),
+            'aprilsheen.pinar@evsu.edu.ph',
             'EVSU BSIT System'
         );
 
-        // TO
+        // RECEIVER
         $mail->addAddress(
             $toEmail,
             $name
@@ -97,25 +95,20 @@ function sendActivationEmail($toEmail, $name)
                 <br>
 
                 <p style='font-size:12px;color:gray'>
-
                     This is an automated message from
                     EVSU Face Recognition Attendance System.
-
                 </p>
 
             </div>
 
         </div>";
 
-        // SEND
+        // SEND EMAIL
         $mail->send();
 
         return true;
 
     } catch (Exception $e) {
-
-        echo "Mailer Error: " .
-            $mail->ErrorInfo;
 
         error_log(
             "Mailer Error: " .
