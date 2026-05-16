@@ -19,11 +19,15 @@ function sendActivationEmail($toEmail, $name)
 
         $mail->Username = 'aprilsheen.pinar@evsu.edu.ph';
 
-        $mail->Password = 'wssp qafe fxlb xczw';
+        $mail->Password = 'wsspqafefxlbxczw';
 
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
 
         $mail->Port = 587;
+
+        $mail->SMTPDebug = 2;
+
+        $mail->Debugoutput = 'error_log';
 
         $mail->setFrom(
             'aprilsheen.pinar@evsu.edu.ph',
