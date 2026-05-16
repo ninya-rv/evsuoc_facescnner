@@ -1,11 +1,8 @@
-<<<<<<< HEAD
 [phases.setup]
-nixPkgs = ["php83"]
+nixPkgs = ["php83", "php83Packages.composer"]
 
-=======
->>>>>>> 9aa7a0d76afdd15f3ba0f140d69b20d5aaa6f39a
 [phases.build]
-cmds = []
+cmds = ["composer install --ignore-platform-reqs"]
 
 [start]
-cmd = "php -S 0.0.0.0:$PORT -t ."y
+cmd = "php -S 0.0.0.0:$PORT -t ."
