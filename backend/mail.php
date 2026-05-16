@@ -1,66 +1,50 @@
 <?php
 
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
-
-require __DIR__ . '/../vendor/autoload.php';
-
 function sendActivationEmail($toEmail, $name)
 {
-    $mail = new PHPMailer(true);
+    $apiKey = getenv('BREVO_API_KEY');
 
-    try {
-        // ======================
-        // SMTP CONFIG
-        // ======================
-        $mail->isSMTP();
-        $mail->Host = 'smtp-relay.brevo.com';
-        $mail->SMTPAuth = true;
+    $data = [
+        "sender" => [
+            "name" => "EVSU BSIT System",
+            "email" => "rhenahmaycabudlay@gmail.com"
+        ],
+        "to" => [
+            [
+                "email" => $toEmail,
+                "name" => $name
+            ]
+        ],
+        "subject" => "Account Activated",
+        "htmlContent" => "
+            <div style='font-family:Arial;padding:20px'>
+                <h2>Account Activated</h2>
+                <p>Hello <b>{$name}</b>, your account has been ACTIVATED.</p>
+            </div>
+        "
+    ];
 
-        // 🔥 IMPORTANT: environment variables
-        $mail->Username = getenv('SMTP_EMAIL');      // Brevo login email
-        $mail->Password = getenv('SMTP_PASSWORD');   // SMTP KEY (NOT API KEY)
+    $ch = curl_init("https://api.brevo.com/v3/smtp/email");
 
-        // ======================
-        // FIX: Better encryption handling
-        // ======================
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port = 587;
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        "accept: application/json",
+        "content-type: application/json",
+        "api-key: $apiKey"
+    ]);
 
-        // ======================
-        // OPTIONAL DEBUG (ENABLE DURING TESTING)
-        // ======================
-        $mail->SMTPDebug = 2; // change to 0 in production
-        $mail->Debugoutput = 'error_log';
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
-        // ======================
-        // SENDER (must be verified in Brevo)
-        // ======================
-        $mail->setFrom(getenv('SMTP_EMAIL'), 'EVSU BSIT System');
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-        $mail->addAddress($toEmail, $name);
+    curl_close($ch);
 
-        // ======================
-        // EMAIL CONTENT
-        // ======================
-        $mail->isHTML(true);
-        $mail->Subject = "Account Activated - EVSU BSIT System";
-
-        $mail->Body = "
-        <div style='font-family:Arial;padding:20px'>
-            <h2>EVSU System</h2>
-            <p>Hello <b>{$name}</b>, your account is ACTIVATED.</p>
-        </div>";
-
-        // ======================
-        // SEND
-        // ======================
-        $mail->send();
+    if ($httpCode == 201) {
         return true;
-
-    } catch (Exception $e) {
-        error_log("MAIL ERROR: " . $mail->ErrorInfo);
-        error_log("EXCEPTION: " . $e->getMessage());
+    } else {
+        error_log("EMAIL ERROR: " . $response);
         return false;
     }
 }
