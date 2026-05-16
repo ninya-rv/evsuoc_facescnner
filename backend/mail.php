@@ -11,10 +11,11 @@ function sendActivationEmail($toEmail, $name)
         $apiKey = getenv('RESEND_API_KEY');
 
         if (!$apiKey) {
-            throw new Exception("Missing RESEND_API_KEY");
+            error_log("Missing RESEND_API_KEY in environment");
+            return false;
         }
 
-        // ✅ THIS IS THE CORRECT WAY (v1.3)
+        // Correct Resend v1.3 usage
         $resend = Resend::client($apiKey);
 
         $resend->emails->send([
@@ -22,9 +23,9 @@ function sendActivationEmail($toEmail, $name)
             'to' => [$toEmail],
             'subject' => 'Account Activated - EVSU BSIT System',
             'html' => "
-                <div style='font-family:Arial'>
-                    <h3>EVSU System</h3>
-                    <p>Hello " . htmlspecialchars($name) . "</p>
+                <div style='font-family:Arial;padding:20px'>
+                    <h2>EVSU System</h2>
+                    <p>Hello " . htmlspecialchars($name) . ",</p>
                     <p>Your account is now <b style='color:green'>ACTIVE</b>.</p>
                 </div>
             "
