@@ -7,7 +7,7 @@ function sendActivationEmail($toEmail, $name)
     try {
 
         $resend = Resend::client(
-            getenv('re_d9B5YisN_Er8TiJXnV52w1xSeBfnCSF41')
+            getenv('RESEND_API_KEY')
         );
 
         $safeName = htmlspecialchars($name);
