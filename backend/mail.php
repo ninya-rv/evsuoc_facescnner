@@ -2,7 +2,7 @@
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use Resend\Client;
+use Resend\Resend;
 
 function sendActivationEmail($toEmail, $name)
 {
@@ -11,11 +11,11 @@ function sendActivationEmail($toEmail, $name)
         $apiKey = getenv('RESEND_API_KEY');
 
         if (!$apiKey) {
-            throw new Exception("Missing RESEND_API_KEY in Railway");
+            throw new Exception("Missing RESEND_API_KEY");
         }
 
-        // CORRECT for v1.3
-        $resend = new Client($apiKey);
+        // ✅ THIS IS THE CORRECT WAY (v1.3)
+        $resend = Resend::client($apiKey);
 
         $resend->emails->send([
             'from' => 'EVSU System <onboarding@resend.dev>',
