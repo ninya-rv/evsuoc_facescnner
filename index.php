@@ -1,6 +1,6 @@
 <?php
 session_start();
-include "../evsuoc_facescnner/backend/db.php";
+include __DIR__ . "/backend/db.php";
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
