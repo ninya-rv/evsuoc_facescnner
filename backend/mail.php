@@ -35,7 +35,7 @@ function sendActivationEmail($toEmail, $name)
 
         // SENDER
         $mail->setFrom(
-            getenv('aprilsheen.pinar@evsu.edu.ph'),
+            getenv('MAIL_USERNAME'),
             'EVSU BSIT System'
         );
 
