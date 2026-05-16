@@ -1,54 +1,112 @@
 <?php
 session_start();
-include "../../backend/db.php";
 
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+include "../../backend/db.php";
+include "../../backend/mail.php";
+
+// CHECK ADMIN SESSION
+if (
+    !isset($_SESSION['role']) ||
+    $_SESSION['role'] !== 'admin'
+) {
     header("Location: /frontend/sign_in.php");
     exit;
 }
 
-include "../../backend/mail.php";
-if (isset($_GET['toggle']) && isset($_GET['id'])) {
+// TOGGLE STUDENT STATUS
+if (
+    isset($_GET['toggle']) &&
+    isset($_GET['id'])
+) {
 
-    $student_id = pg_escape_string($conn, $_GET['id']);
+    $student_id = pg_escape_string(
+        $conn,
+        $_GET['id']
+    );
 
-    $checkStudent = pg_query($conn, "
-        SELECT status, email, name
+    // GET STUDENT INFO
+    $checkStudent = pg_query(
+        $conn,
+        "
+        SELECT
+            status,
+            email,
+            name
         FROM students
         WHERE student_id='$student_id'
-    ");
+        "
+    );
 
-    if ($checkStudent && pg_num_rows($checkStudent) > 0) {
+    if (
+        $checkStudent &&
+        pg_num_rows($checkStudent) > 0
+    ) {
 
-        $student = pg_fetch_assoc($checkStudent);
+        $student = pg_fetch_assoc(
+            $checkStudent
+        );
 
-        $newStatus = ($student['status'] === 'Active')
+        // TOGGLE STATUS
+        $newStatus =
+            ($student['status'] === 'Active')
             ? 'Inactive'
             : 'Active';
 
-        pg_query($conn, "
+        // UPDATE STATUS
+        $updateQuery = pg_query(
+            $conn,
+            "
             UPDATE students
             SET status='$newStatus'
             WHERE student_id='$student_id'
-        ");
+            "
+        );
 
+        // SEND EMAIL IF ACTIVATED
         if ($newStatus === 'Active') {
-            sendActivationEmail(
+
+            $emailSent = sendActivationEmail(
                 $student['email'],
                 $student['name']
             );
+
+            if (!$emailSent) {
+
+                echo "
+                <script>
+                    alert('Email failed to send.');
+                </script>
+                ";
+
+            } else {
+
+                echo "
+                <script>
+                    alert('Email sent successfully.');
+                </script>
+                ";
+            }
         }
     }
 
-    header("Location: dashboard.php");
+    // REDIRECT
+    header("Refresh:2; url=dashboard.php");
     exit;
 }
-$adminName = trim($_SESSION['name'] ?? '');
+
+// ADMIN INFO
+$adminName = trim(
+    $_SESSION['name'] ?? ''
+);
+
 $adminInitials = 'SA';
 
 if ($adminName !== '') {
 
-    $nameParts = preg_split('/\s+/', $adminName);
+    $nameParts = preg_split(
+        '/\s+/',
+        $adminName
+    );
 
     if (count($nameParts) > 1) {
 
@@ -68,6 +126,8 @@ if ($adminName !== '') {
 $adminEmail =
     $_SESSION['email']
     ?? 'admin@evsu.edu.ph';
+
+// TOTAL STUDENTS
 $totalStudentsQuery = "
     SELECT COUNT(*) as total
     FROM students
@@ -82,6 +142,7 @@ $totalStudents = pg_fetch_assoc(
     $totalStudentsResult
 )['total'];
 
+// ACTIVE STUDENTS
 $activeQuery = "
     SELECT COUNT(*) as total
     FROM students
@@ -97,6 +158,7 @@ $activeStudents = pg_fetch_assoc(
     $activeResult
 )['total'];
 
+// INACTIVE STUDENTS
 $inactiveQuery = "
     SELECT COUNT(*) as total
     FROM students
@@ -111,6 +173,8 @@ $inactiveResult = pg_query(
 $inactiveStudents = pg_fetch_assoc(
     $inactiveResult
 )['total'];
+
+// STUDENT LIST
 $combinedQuery = "
     SELECT
         student_id AS id,
@@ -123,15 +187,18 @@ $combinedQuery = "
     ORDER BY name ASC
 ";
 
-$result = pg_query($conn, $combinedQuery);
+$result = pg_query(
+    $conn,
+    $combinedQuery
+);
 
 $combinedList = [];
 
 while ($row = pg_fetch_assoc($result)) {
+
     $combinedList[] = $row;
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>

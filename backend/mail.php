@@ -11,40 +11,44 @@ function sendActivationEmail($toEmail, $name)
 
     try {
 
-        // ENABLE ERROR REPORTING
         error_reporting(E_ALL);
         ini_set('display_errors', 1);
 
+        // SMTP
         $mail->isSMTP();
 
         $mail->Host = 'smtp.gmail.com';
 
         $mail->SMTPAuth = true;
 
+        // RAILWAY VARIABLES
         $mail->Username = getenv('aprilsheen.pinar@evsu.edu.ph');
 
         $mail->Password = getenv('wsspqafefxlbxczw');
 
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->SMTPSecure =
+            PHPMailer::ENCRYPTION_STARTTLS;
 
         $mail->Port = 587;
 
-       
+        // DEBUG
         $mail->SMTPDebug = 2;
 
         $mail->Debugoutput = 'error_log';
 
-        // nagsend
+        // FROM
         $mail->setFrom(
-
-        getenv('aprilsheen.pinar@evsu.edu.ph'),
+            getenv('aprilsheen.pinar@evsu.edu.ph'),
             'EVSU BSIT System'
         );
 
-       
-        $mail->addAddress($toEmail, $name);
+        // TO
+        $mail->addAddress(
+            $toEmail,
+            $name
+        );
 
-      
+        // EMAIL CONTENT
         $mail->isHTML(true);
 
         $mail->Subject =
@@ -103,17 +107,19 @@ function sendActivationEmail($toEmail, $name)
 
         </div>";
 
-      
+        // SEND
         $mail->send();
 
         return true;
 
     } catch (Exception $e) {
 
-        echo "Mailer Error: " . $mail->ErrorInfo;
+        echo "Mailer Error: " .
+            $mail->ErrorInfo;
 
         error_log(
-            "Mailer Error: " . $mail->ErrorInfo
+            "Mailer Error: " .
+            $mail->ErrorInfo
         );
 
         return false;
