@@ -5,27 +5,41 @@ use PHPMailer\PHPMailer\Exception;
 
 require __DIR__ . '/../vendor/autoload.php';
 
-function sendActivationEmail($toEmail, $name) {
-
+function sendActivationEmail($toEmail, $name)
+{
     $mail = new PHPMailer(true);
 
     try {
+
+        // ======================
+        // SMTP CONFIG
+        // ======================
         $mail->isSMTP();
         $mail->Host = 'smtp.gmail.com';
         $mail->SMTPAuth = true;
 
-        // ✅ FIX: use ENV instead of hardcoded credentials
+        // 🔥 USE ENV VARIABLES (Railway)
         $mail->Username = getenv('SMTP_EMAIL');
         $mail->Password = getenv('SMTP_PASSWORD');
 
         $mail->SMTPSecure = 'tls';
         $mail->Port = 587;
 
-        // Sender (must match Gmail SMTP account)
-        $mail->setFrom(getenv('SMTP_EMAIL'), 'EVSU BSIT System');
+        // ======================
+        // DEBUG (IMPORTANT)
+        // ======================
+        $mail->SMTPDebug = 2;          // show full SMTP logs
+        $mail->Debugoutput = 'html';
 
+        // ======================
+        // SENDER / RECEIVER
+        // ======================
+        $mail->setFrom(getenv('SMTP_EMAIL'), 'EVSU BSIT System');
         $mail->addAddress($toEmail, $name);
 
+        // ======================
+        // EMAIL CONTENT
+        // ======================
         $mail->isHTML(true);
         $mail->Subject = "Account Activated - EVSU BSIT System";
 
@@ -39,7 +53,7 @@ function sendActivationEmail($toEmail, $name) {
 
                 <p>Your student profile has been <b style='color:green'>ACTIVATED</b>.</p>
 
-                <p>You may now use the system for attendance.</p>
+                <p>You may now use the system for attendance verification.</p>
 
                 <div style='margin-top:15px;padding:10px;background:#f8f8f8;border-left:5px solid #800000'>
                     <p style='margin:0'><b>Status:</b> Active</p>
@@ -53,11 +67,21 @@ function sendActivationEmail($toEmail, $name) {
             </div>
         </div>";
 
+        // ======================
+        // SEND EMAIL
+        // ======================
         $mail->send();
+
         return true;
 
     } catch (Exception $e) {
-        error_log("Mail Error: " . $mail->ErrorInfo);
+
+        // 🔥 SHOW REAL ERROR (VERY IMPORTANT)
+        echo "<pre>";
+        echo "EMAIL FAILED ❌\n";
+        echo "ERROR: " . $mail->ErrorInfo . "\n";
+        echo "</pre>";
+
         return false;
     }
 }
