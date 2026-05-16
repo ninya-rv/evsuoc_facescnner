@@ -1,109 +1,77 @@
 <?php
 
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
-
 require __DIR__ . '/../vendor/autoload.php';
+
+use Resend;
 
 function sendActivationEmail($toEmail, $name)
 {
-    $mail = new PHPMailer(true);
-
     try {
 
-        // SMTP SETTINGS
-        $mail->isSMTP();
-
-        $mail->Host = 'smtp.gmail.com';
-
-        $mail->SMTPAuth = true;
-
-        // RAILWAY VARIABLES
-        $mail->Username = getenv('aprilsheen.pinar@evsu.edu.ph');
-
-        $mail->Password = getenv('wsspqafefxlbxczw');
-
-        $mail->SMTPSecure =
-            PHPMailer::ENCRYPTION_STARTTLS;
-
-        $mail->Port = 465;
-
-        // DEBUG
-        $mail->SMTPDebug = 2;
-
-        $mail->Debugoutput = 'error_log';
-
-        // SENDER
-        $mail->setFrom(
-            getenv('MAIL_USERNAME'),
-            'EVSU BSIT System'
+        $resend = Resend::client(
+            getenv('re_d9B5YisN_Er8TiJXnV52w1xSeBfnCSF41')
         );
-
-        // RECEIVER
-        $mail->addAddress(
-            $toEmail,
-            $name
-        );
-
-        // EMAIL CONTENT
-        $mail->isHTML(true);
-
-        $mail->Subject =
-            "Account Activated - EVSU BSIT System";
 
         $safeName = htmlspecialchars($name);
 
-        $mail->Body = "
-        <div style='font-family:Arial;padding:20px;background:#f4f4f4'>
+        $resend->emails->send([
 
-            <div style='max-width:600px;margin:auto;background:white;padding:20px;border-radius:10px'>
+            'from' => 'onboarding@resend.dev',
 
-                <h2 style='color:#800000'>
-                    EVSU Face Recognition System
-                </h2>
+            'to' => [$toEmail],
 
-                <p>
-                    Hello <b>{$safeName}</b>,
-                </p>
+            'subject' =>
+                'Account Activated - EVSU BSIT System',
 
-                <p>
-                    Your student profile has been
-                    <b style='color:green'>ACTIVATED</b>
-                    by the administrator.
-                </p>
+            'html' => "
+            <div style='font-family:Arial;padding:20px;background:#f4f4f4'>
 
-                <p>
-                    You may now use your face for
-                    attendance verification.
-                </p>
+                <div style='max-width:600px;margin:auto;background:white;padding:20px;border-radius:10px'>
 
-                <p>
-                    <b>Instruction:</b>
-                    Please proceed to your instructor
-                    and scan your face for attendance recording.
-                </p>
+                    <h2 style='color:#800000'>
+                        EVSU Face Recognition System
+                    </h2>
 
-                <div style='margin-top:15px;padding:10px;background:#f8f8f8;border-left:5px solid #800000'>
+                    <p>
+                        Hello <b>{$safeName}</b>,
+                    </p>
 
-                    <p style='margin:0'>
-                        <b>Status:</b> Active
+                    <p>
+                        Your student profile has been
+                        <b style='color:green'>ACTIVATED</b>
+                        by the administrator.
+                    </p>
+
+                    <p>
+                        You may now use your face for
+                        attendance verification.
+                    </p>
+
+                    <p>
+                        <b>Instruction:</b>
+                        Please proceed to your instructor
+                        and scan your face for attendance recording.
+                    </p>
+
+                    <div style='margin-top:15px;padding:10px;background:#f8f8f8;border-left:5px solid #800000'>
+
+                        <p style='margin:0'>
+                            <b>Status:</b> Active
+                        </p>
+
+                    </div>
+
+                    <br>
+
+                    <p style='font-size:12px;color:gray'>
+                        This is an automated message from
+                        EVSU Face Recognition Attendance System.
                     </p>
 
                 </div>
 
-                <br>
-
-                <p style='font-size:12px;color:gray'>
-                    This is an automated message from
-                    EVSU Face Recognition Attendance System.
-                </p>
-
-            </div>
-
-        </div>";
-
-        // SEND EMAIL
-        $mail->send();
+            </div>"
+        ]);
 
         return true;
 
@@ -111,7 +79,7 @@ function sendActivationEmail($toEmail, $name)
 
         die(
             "MAILER ERROR: " .
-            $mail->ErrorInfo
+            $e->getMessage()
         );
     }
 }
