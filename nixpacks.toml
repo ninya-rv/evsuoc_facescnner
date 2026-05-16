@@ -1,8 +1,11 @@
+<<<<<<< HEAD
 [phases.setup]
 nixPkgs = ["php83"]
 
+=======
+>>>>>>> 9aa7a0d76afdd15f3ba0f140d69b20d5aaa6f39a
 [phases.build]
 cmds = []
 
 [start]
-cmd = "php -S 0.0.0.0:$PORT -t ."
+cmd = "php -S 0.0.0.0:$PORT -t ."y
