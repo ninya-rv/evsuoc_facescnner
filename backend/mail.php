@@ -2,18 +2,18 @@
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use Resend\Client;
+use Resend\Resend;
 
 function sendActivationEmail($toEmail, $name)
 {
     try {
 
-        // API KEY FROM RAILWAY
-        $client = new Client(getenv('RESEND_API_KEY'));
+        // CREATE CLIENT PROPERLY (IMPORTANT FIX)
+        $resend = Resend::client(getenv('RESEND_API_KEY'));
 
         $safeName = htmlspecialchars($name);
 
-        $client->emails->send([
+        $resend->emails->send([
             'from' => 'onboarding@resend.dev',
             'to' => [$toEmail],
             'subject' => 'Account Activated - EVSU BSIT System',
