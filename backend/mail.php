@@ -2,7 +2,6 @@
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use Resend\Resend;
 
 function sendActivationEmail($toEmail, $name)
 {
@@ -16,7 +15,7 @@ function sendActivationEmail($toEmail, $name)
         }
 
         // Correct Resend v1.3 usage
-        $resend = Resend::client($apiKey);
+        $resend = \Resend::client($apiKey);
 
         $resend->emails->send([
             'from' => 'EVSU System <onboarding@resend.dev>',
