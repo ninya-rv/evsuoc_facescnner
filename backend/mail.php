@@ -12,29 +12,35 @@ function sendActivationEmail($toEmail, $name)
     try {
 
         // ======================
+        // GET ENV VARIABLES
+        // ======================
+        $smtpEmail = getenv('SMTP_EMAIL');
+        $smtpPassword = getenv('SMTP_PASSWORD');
+
+        // ❗ VALIDATION (PREVENT "Invalid From")
+        if (!$smtpEmail || !$smtpPassword) {
+            throw new Exception("SMTP ENV variables not set in Railway");
+        }
+
+        // ======================
         // SMTP CONFIG
         // ======================
         $mail->isSMTP();
         $mail->Host = 'smtp.gmail.com';
         $mail->SMTPAuth = true;
-
-        // 🔥 USE ENV VARIABLES (Railway)
-        $mail->Username = getenv('SMTP_EMAIL');
-        $mail->Password = getenv('SMTP_PASSWORD');
+        $mail->Username = $smtpEmail;
+        $mail->Password = $smtpPassword;
 
         $mail->SMTPSecure = 'tls';
         $mail->Port = 587;
 
-        // ======================
-        // DEBUG (IMPORTANT)
-        // ======================
-        $mail->SMTPDebug = 2;          // show full SMTP logs
-        $mail->Debugoutput = 'html';
+        // ❌ TURN OFF DEBUG IN PRODUCTION (VERY IMPORTANT)
+        $mail->SMTPDebug = 0;
 
         // ======================
         // SENDER / RECEIVER
         // ======================
-        $mail->setFrom(getenv('SMTP_EMAIL'), 'EVSU BSIT System');
+        $mail->setFrom($smtpEmail, 'EVSU BSIT System');
         $mail->addAddress($toEmail, $name);
 
         // ======================
@@ -71,16 +77,12 @@ function sendActivationEmail($toEmail, $name)
         // SEND EMAIL
         // ======================
         $mail->send();
-
         return true;
 
     } catch (Exception $e) {
 
-        // 🔥 SHOW REAL ERROR (VERY IMPORTANT)
-        echo "<pre>";
-        echo "EMAIL FAILED ❌\n";
-        echo "ERROR: " . $mail->ErrorInfo . "\n";
-        echo "</pre>";
+        // LOG ERROR ONLY (DO NOT ECHO IN RAILWAY)
+        error_log("EMAIL ERROR: " . $mail->ErrorInfo);
 
         return false;
     }
