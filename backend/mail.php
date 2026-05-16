@@ -109,12 +109,10 @@ function sendActivationEmail($toEmail, $name)
 
     } catch (Exception $e) {
 
-        error_log(
-            "Mailer Error: " .
+        die(
+            "MAILER ERROR: " .
             $mail->ErrorInfo
         );
-
-        return false;
     }
 }
 ?>
