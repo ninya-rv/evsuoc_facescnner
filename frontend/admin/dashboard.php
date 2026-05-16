@@ -3,7 +3,7 @@ session_start();
 include "../../backend/db.php";
 
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
-    header("Location: /frontend/sign_in.php");
+    header("Location: ../../index.php");
     exit;
 }
 
