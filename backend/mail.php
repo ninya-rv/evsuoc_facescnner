@@ -8,27 +8,24 @@ function sendActivationEmail($toEmail, $name)
 {
     try {
 
-        // CREATE CLIENT PROPERLY (IMPORTANT FIX)
-        $resend = Resend::client(getenv('RESEND_API_KEY'));
+        $apiKey = getenv('RESEND_API_KEY');
 
-        $safeName = htmlspecialchars($name);
+        if (!$apiKey) {
+            throw new Exception("Missing RESEND_API_KEY");
+        }
+
+        $resend = Resend::client($apiKey);
 
         $resend->emails->send([
-            'from' => 'onboarding@resend.dev',
+            'from' => 'EVSU System <onboarding@resend.dev>',
             'to' => [$toEmail],
             'subject' => 'Account Activated - EVSU BSIT System',
-            'html' => "
-                <div style='font-family:Arial;padding:20px'>
-                    <h2>EVSU Face Recognition System</h2>
-                    <p>Hello <b>{$safeName}</b>, your account is ACTIVATED.</p>
-                </div>
-            "
+            'html' => "<p>Hello " . htmlspecialchars($name) . ", your account is ACTIVE.</p>"
         ]);
 
         return true;
 
     } catch (Exception $e) {
-
         error_log("MAIL ERROR: " . $e->getMessage());
         return false;
     }
