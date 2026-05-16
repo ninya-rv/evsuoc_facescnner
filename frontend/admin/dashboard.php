@@ -33,10 +33,14 @@ if (isset($_GET['toggle']) && isset($_GET['id'])) {
         ");
 
         if ($newStatus === 'Active') {
-            sendActivationEmail(
+            $emailSent = sendActivationEmail(
                 $student['email'],
                 $student['name']
             );
+
+            if (!$emailSent) {
+                error_log("Email failed for student: " . $student_id);
+            }
         }
     }
 

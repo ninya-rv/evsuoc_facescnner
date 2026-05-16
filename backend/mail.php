@@ -12,33 +12,30 @@ function sendActivationEmail($toEmail, $name)
     try {
 
         // ======================
-        // SMTP CONFIG
+        // SMTP CONFIG (BREVO)
         // ======================
         $mail->isSMTP();
-        $mail->Host = 'smtp.gmail.com';
+        $mail->Host = getenv('SMTP_HOST');
         $mail->SMTPAuth = true;
+        $mail->Username = getenv('SMTP_EMAIL');   // Brevo login email
+        $mail->Password = getenv('SMTP_PASSWORD'); // Brevo SMTP KEY
 
-        // 🔥 USE ENV VARIABLES (Railway)
-        $mail->Username = getenv('SMTP_EMAIL');
-        $mail->Password = getenv('SMTP_PASSWORD');
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port = getenv('SMTP_PORT') ?: 587;
 
-        $mail->SMTPSecure = 'tls';
-        $mail->Port = 587;
-
-        // ======================
-        // DEBUG (IMPORTANT)
-        // ======================
-        $mail->SMTPDebug = 2;          // show full SMTP logs
-        $mail->Debugoutput = 'html';
+        // OPTIONAL DEBUG (REMOVE AFTER TEST)
+        // $mail->SMTPDebug = 2;
 
         // ======================
-        // SENDER / RECEIVER
+        // SENDER
         // ======================
         $mail->setFrom(getenv('SMTP_EMAIL'), 'EVSU BSIT System');
+
+        // RECEIVER
         $mail->addAddress($toEmail, $name);
 
         // ======================
-        // EMAIL CONTENT
+        // CONTENT
         // ======================
         $mail->isHTML(true);
         $mail->Subject = "Account Activated - EVSU BSIT System";
@@ -51,37 +48,25 @@ function sendActivationEmail($toEmail, $name)
 
                 <p>Hello <b>$name</b>,</p>
 
-                <p>Your student profile has been <b style='color:green'>ACTIVATED</b>.</p>
+                <p>Your student account is now <b style='color:green'>ACTIVATED</b>.</p>
 
-                <p>You may now use the system for attendance verification.</p>
+                <p>You can now use the system for attendance.</p>
 
-                <div style='margin-top:15px;padding:10px;background:#f8f8f8;border-left:5px solid #800000'>
-                    <p style='margin:0'><b>Status:</b> Active</p>
-                </div>
+                <p><b>Status:</b> Active</p>
 
                 <br>
                 <p style='font-size:12px;color:gray'>
-                    This is an automated message from EVSU System.
+                    Automated message from EVSU System.
                 </p>
 
             </div>
         </div>";
 
-        // ======================
-        // SEND EMAIL
-        // ======================
         $mail->send();
-
         return true;
 
     } catch (Exception $e) {
-
-        // 🔥 SHOW REAL ERROR (VERY IMPORTANT)
-        echo "<pre>";
-        echo "EMAIL FAILED ❌\n";
-        echo "ERROR: " . $mail->ErrorInfo . "\n";
-        echo "</pre>";
-
+        error_log("MAIL ERROR: " . $mail->ErrorInfo);
         return false;
     }
 }
