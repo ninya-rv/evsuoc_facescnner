@@ -55,13 +55,12 @@ $assignedStudents = [];
 $totalStudents = 0;
 $activeStudents = 0;
 $inactiveStudents = 0;
-$assignedClasses = [];
 
 $assignmentQuery = pg_query_params(
     $conn,
     "SELECT DISTINCT year_level, section
      FROM instructor_assignment
-     WHERE LOWER(TRIM(instructor_name)) = LOWER(TRIM($1))",
+     WHERE instructor_name = $1",
     [$instructorName]
 );
 
@@ -71,17 +70,10 @@ if ($assignmentQuery && pg_num_rows($assignmentQuery) > 0) {
 
     while ($assignment = pg_fetch_assoc($assignmentQuery)) {
 
-        $year = trim(pg_escape_string($conn, $assignment['year_level']));
-        $section = trim(pg_escape_string($conn, $assignment['section']));
-        $sectionKey = strtolower($year) . '|' . strtolower($section);
+        $year = pg_escape_string($conn, $assignment['year_level']);
+        $section = pg_escape_string($conn, $assignment['section']);
 
-        $assignedClasses[$sectionKey] = [
-            'year' => $year,
-            'section' => $section,
-            'student_count' => 0,
-        ];
-
-        $conditions[] = "(LOWER(TRIM(year)) = LOWER('{$year}') AND LOWER(TRIM(section)) = LOWER('{$section}'))";
+        $conditions[] = "(year = '{$year}' AND section = '{$section}')";
     }
 }
 
@@ -101,12 +93,8 @@ if (!empty($conditions)) {
         while ($student = pg_fetch_assoc($studentResult)) {
 
             $assignedStudents[] = $student;
-            $totalStudents++;
 
-            $studentKey = strtolower(trim($student['year'])) . '|' . strtolower(trim($student['section']));
-            if (isset($assignedClasses[$studentKey])) {
-                $assignedClasses[$studentKey]['student_count']++;
-            }
+            $totalStudents++;
 
             if (isset($student['status'])) {
 
@@ -202,21 +190,6 @@ if (!empty($conditions)) {
             </div>
         </div>
         <section class="student-section">
-            <div class="assigned-classes">
-                <h4>Assigned Sections</h4>
-                <?php if (!empty($assignedClasses)): ?>
-                    <ul class="assigned-list">
-                        <?php foreach ($assignedClasses as $class): ?>
-                            <li>
-                                <?php echo htmlspecialchars($class['year'] . ' | Section ' . $class['section']); ?>
-                                (<?php echo $class['student_count']; ?> students)
-                            </li>
-                        <?php endforeach; ?>
-                    </ul>
-                <?php else: ?>
-                    <p>No assigned sections found.</p>
-                <?php endif; ?>
-            </div>
             <h4>Student List</h4>
             <br>
             <div class="search-filter">
@@ -291,23 +264,6 @@ if (!empty($conditions)) {
                             <td><?php echo htmlspecialchars($student['year']); ?></td>
                             <td><?php echo htmlspecialchars($student['section']); ?></td>
                             <td><?php echo isset($student['status']) ? htmlspecialchars($student['status']) : 'inactive'; ?></td>
-                        </tr>
-                    <?php endforeach; ?>
-                    <?php foreach ($assignedClasses as $class): ?>
-                        <?php if ($class['student_count'] === 0): ?>
-                            <tr>
-                                <td colspan="6" style="text-align:center; font-style:italic;">
-                                    No students assigned for <?php echo htmlspecialchars($class['year'] . ' | Section ' . $class['section']); ?>.
-                                </td>
-                            </tr>
-                        <?php endif; ?>
-                    <?php endforeach; ?>
-                <?php elseif (!empty($assignedClasses)): ?>
-                    <?php foreach ($assignedClasses as $class): ?>
-                        <tr>
-                            <td colspan="6" style="text-align:center; font-style:italic;">
-                                No students assigned for <?php echo htmlspecialchars($class['year'] . ' | Section ' . $class['section']); ?>.
-                            </td>
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
