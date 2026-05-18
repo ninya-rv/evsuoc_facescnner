@@ -55,6 +55,8 @@ $assignedStudents = [];
 $totalStudents = 0;
 $activeStudents = 0;
 $inactiveStudents = 0;
+$assignedClasses = [];
+$assignedCounts = [];
 
 $assignmentQuery = pg_query_params(
     $conn,
@@ -74,6 +76,11 @@ if ($assignmentQuery && pg_num_rows($assignmentQuery) > 0) {
         $section = trim(pg_escape_string($conn, $assignment['section']));
 
         $conditions[] = "(LOWER(TRIM(year)) = LOWER('{$year}') AND LOWER(TRIM(section)) = LOWER('{$section}'))";
+        $assignedClasses[] = [
+            'year' => $year,
+            'section' => $section,
+        ];
+        $assignedCounts[strtolower($year) . '|' . strtolower($section)] = 0;
     }
 }
 
@@ -95,6 +102,12 @@ if (!empty($conditions)) {
             $assignedStudents[] = $student;
 
             $totalStudents++;
+
+            $studentKey = strtolower(trim($student['year'])) . '|' . strtolower(trim($student['section']));
+            if (!isset($assignedCounts[$studentKey])) {
+                $assignedCounts[$studentKey] = 0;
+            }
+            $assignedCounts[$studentKey]++;
 
             if (isset($student['status'])) {
 
@@ -189,7 +202,24 @@ if (!empty($conditions)) {
                 <p><?php echo $inactiveStudents; ?></p>
             </div>
         </div>
+
         <section class="student-section">
+            <div class="assigned-classes">
+                <h4>Assigned Sections</h4>
+                <?php if (!empty($assignedClasses)): ?>
+                    <ul class="assigned-list">
+                        <?php foreach ($assignedClasses as $class): ?>
+                            <?php $key = strtolower(trim($class['year'])) . '|' . strtolower(trim($class['section'])); ?>
+                            <li>
+                                <?php echo htmlspecialchars($class['year'] . ' | Section ' . $class['section']); ?>
+                                (<?php echo $assignedCounts[$key] ?? 0; ?> students)
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php else: ?>
+                    <p>No assigned sections found.</p>
+                <?php endif; ?>
+            </div>
             <h4>Student List</h4>
             <br>
             <div class="search-filter">
