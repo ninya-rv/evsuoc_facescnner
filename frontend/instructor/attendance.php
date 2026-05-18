@@ -5,7 +5,7 @@ include "../../backend/db.php";
 date_default_timezone_set("Asia/Manila");
 
 if (!isset($_SESSION['user_id'])) {
-    header("Location: ../sign_in.html");
+    header("Location: ../../index.php");
     exit;
 }
 

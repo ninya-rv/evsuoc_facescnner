@@ -3,12 +3,12 @@ session_start();
 include "../../backend/db.php";
 
 if(!isset($_SESSION['user_id'])){
-    header("Location: ../sign_in.html");
+    header("Location: ../../index.php");
     exit;
 }
 
 if($_SESSION['role'] !== 'instructor'){
-    header("Location: ../sign_in.html");
+    header("Location: ../../index.php");
     exit;
 }
 
