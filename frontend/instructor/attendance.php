@@ -4,6 +4,12 @@ include "../../backend/db.php";
 
 date_default_timezone_set("Asia/Manila");
 
+/*
+|--------------------------------------------------------------------------
+| SESSION CHECK
+|--------------------------------------------------------------------------
+*/
+
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../../index.php");
     exit;
@@ -13,6 +19,12 @@ if ($_SESSION['role'] !== 'instructor') {
     header("Location: ../admin/dashboard.php");
     exit;
 }
+
+/*
+|--------------------------------------------------------------------------
+| GET INSTRUCTOR INFO
+|--------------------------------------------------------------------------
+*/
 
 $instructor_id = $_SESSION['user_id'];
 
@@ -30,16 +42,18 @@ if ($instructorResult && pg_num_rows($instructorResult) > 0) {
 
     $instructorData = pg_fetch_assoc($instructorResult);
 
-    $instructorName  = $instructorData['name'];
-    $instructorEmail = $instructorData['email'];
+    $instructorName  = trim($instructorData['name']);
+    $instructorEmail = trim($instructorData['email']);
 
-    $nameParts = explode(" ", trim($instructorName));
+    $nameParts = explode(" ", $instructorName);
 
     $initials = "";
 
     foreach ($nameParts as $part) {
 
-        $initials .= strtoupper(substr($part, 0, 1));
+        if (!empty($part)) {
+            $initials .= strtoupper(substr($part, 0, 1));
+        }
 
         if (strlen($initials) >= 2) {
             break;
@@ -53,7 +67,13 @@ if ($instructorResult && pg_num_rows($instructorResult) > 0) {
     $initials        = 'IN';
 }
 
-$instructor_name = pg_escape_string($conn, $instructorName);
+$instructor_name = pg_escape_string($conn, trim($instructorName));
+
+/*
+|--------------------------------------------------------------------------
+| GET SUBJECT LIST
+|--------------------------------------------------------------------------
+*/
 
 $subjectQuery = "
     SELECT DISTINCT subject
@@ -73,6 +93,12 @@ if ($subjectResult && pg_num_rows($subjectResult) > 0) {
     }
 }
 
+/*
+|--------------------------------------------------------------------------
+| AUTO INSERT ABSENT STUDENTS
+|--------------------------------------------------------------------------
+*/
+
 $currentDate = date("Y-m-d");
 $currentTime = date("H:i:s");
 
@@ -84,110 +110,185 @@ $assignmentQuery = "
 
 $assignmentResult = pg_query($conn, $assignmentQuery);
 
-while ($assignment = pg_fetch_assoc($assignmentResult)) {
+if ($assignmentResult) {
 
-    $subject    = pg_escape_string($conn, $assignment['subject']);
-    $year_level = pg_escape_string($conn, $assignment['year_level']);
-    $section    = pg_escape_string($conn, $assignment['section']);
-    $end_time   = $assignment['end_time'];
+    while ($assignment = pg_fetch_assoc($assignmentResult)) {
 
-    // CHECK IF CLASS ALREADY ENDED
-    if (strtotime($currentTime) >= strtotime($end_time)) {
+        $subject    = pg_escape_string($conn, trim($assignment['subject']));
+        $year_level = pg_escape_string($conn, trim($assignment['year_level']));
+        $section    = pg_escape_string($conn, trim($assignment['section']));
+        $end_time   = trim($assignment['end_time']);
 
-        // GET ALL ACTIVE STUDENTS
-        $studentQuery = "
-            SELECT *
-            FROM students
-            WHERE status = 'active'
-            AND LOWER(TRIM(year)) = LOWER(TRIM('$year_level'))
-            AND LOWER(TRIM(section)) = LOWER(TRIM('$section'))
-        ";
+        /*
+        |--------------------------------------------------------------------------
+        | CHECK IF CLASS ENDED
+        |--------------------------------------------------------------------------
+        */
 
-        $studentResult = pg_query($conn, $studentQuery);
+        if (strtotime($currentTime) >= strtotime($end_time)) {
 
-        while ($student = pg_fetch_assoc($studentResult)) {
+            /*
+            |--------------------------------------------------------------------------
+            | GET ACTIVE STUDENTS
+            |--------------------------------------------------------------------------
+            */
 
-            $student_id = pg_escape_string($conn, $student['student_id']);
-            $name       = pg_escape_string($conn, $student['name']);
-            $email      = pg_escape_string($conn, $student['email']);
-
-            // CHECK IF STUDENT ALREADY HAS ATTENDANCE TODAY
-            $attendanceCheckQuery = "
+            $studentQuery = "
                 SELECT *
-                FROM attendance
-                WHERE student_id = '$student_id'
-                AND subject = '$subject'
-                AND date = '$currentDate'
-                LIMIT 1
+                FROM students
+                WHERE LOWER(TRIM(status)) = 'active'
+                AND LOWER(TRIM(year)) = LOWER(TRIM('$year_level'))
+                AND LOWER(TRIM(section)) = LOWER(TRIM('$section'))
             ";
 
-            $attendanceCheckResult = pg_query($conn, $attendanceCheckQuery);
+            $studentResult = pg_query($conn, $studentQuery);
 
-            // IF NO RECORD -> INSERT ABSENT
-            if (pg_num_rows($attendanceCheckResult) == 0) {
+            if ($studentResult) {
 
-                $insertAbsentQuery = "
-                    INSERT INTO attendance (
-                        student_id,
-                        name,
-                        email,
-                        instructor_name,
-                        subject,
-                        year_level,
-                        section,
-                        date,
-                        time_in,
-                        time_out,
-                        status
-                    )
-                    VALUES (
-                        '$student_id',
-                        '$name',
-                        '$email',
-                        '$instructor_name',
-                        '$subject',
-                        '$year_level',
-                        '$section',
-                        '$currentDate',
-                        NULL,
-                        NULL,
-                        'Absent'
-                    )
-                ";
+                while ($student = pg_fetch_assoc($studentResult)) {
 
-                pg_query($conn, $insertAbsentQuery);
-            }
-            else {
+                    $student_id = pg_escape_string(
+                        $conn,
+                        trim($student['student_id'])
+                    );
 
-                // UPDATE RECORD IF NO TIME IN
-                $attendanceData = pg_fetch_assoc($attendanceCheckResult);
+                    $name = pg_escape_string(
+                        $conn,
+                        trim($student['name'])
+                    );
 
-                if (
-                    empty($attendanceData['time_in']) &&
-                    empty($attendanceData['time_out'])
-                ) {
+                    $email = pg_escape_string(
+                        $conn,
+                        trim($student['email'])
+                    );
 
-                    $attendance_id = $attendanceData['id'];
+                    /*
+                    |--------------------------------------------------------------------------
+                    | CHECK IF STUDENT ALREADY HAS ATTENDANCE
+                    |--------------------------------------------------------------------------
+                    */
 
-                    $updateAbsentQuery = "
-                        UPDATE attendance
-                        SET status = 'Absent',
-                            time_in = NULL,
-                            time_out = NULL
-                        WHERE id = '$attendance_id'
+                    $attendanceCheckQuery = "
+                        SELECT id, time_in, time_out, status
+                        FROM attendance
+                        WHERE LOWER(TRIM(student_id))
+                            = LOWER(TRIM('$student_id'))
+                        AND LOWER(TRIM(subject))
+                            = LOWER(TRIM('$subject'))
+                        AND date = '$currentDate'
+                        LIMIT 1
                     ";
 
-                    pg_query($conn, $updateAbsentQuery);
+                    $attendanceCheckResult = pg_query(
+                        $conn,
+                        $attendanceCheckQuery
+                    );
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | IF NO RECORD -> INSERT ABSENT
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (
+                        $attendanceCheckResult &&
+                        pg_num_rows($attendanceCheckResult) == 0
+                    ) {
+
+                        $insertAbsentQuery = "
+                            INSERT INTO attendance (
+                                student_id,
+                                name,
+                                email,
+                                instructor_name,
+                                subject,
+                                year_level,
+                                section,
+                                date,
+                                time_in,
+                                time_out,
+                                status
+                            )
+                            VALUES (
+                                '$student_id',
+                                '$name',
+                                '$email',
+                                '$instructor_name',
+                                '$subject',
+                                '$year_level',
+                                '$section',
+                                '$currentDate',
+                                NULL,
+                                NULL,
+                                'Absent'
+                            )
+                        ";
+
+                        $insertResult = pg_query(
+                            $conn,
+                            $insertAbsentQuery
+                        );
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | DEBUG INSERT ERROR
+                        |--------------------------------------------------------------------------
+                        */
+
+                        if (!$insertResult) {
+                            echo "<pre>";
+                            echo pg_last_error($conn);
+                            echo "</pre>";
+                        }
+
+                    } else {
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | UPDATE RECORD IF NO TIME IN / OUT
+                        |--------------------------------------------------------------------------
+                        */
+
+                        $attendanceData = pg_fetch_assoc(
+                            $attendanceCheckResult
+                        );
+
+                        if (
+                            empty($attendanceData['time_in']) &&
+                            empty($attendanceData['time_out'])
+                        ) {
+
+                            $attendance_id = $attendanceData['id'];
+
+                            $updateAbsentQuery = "
+                                UPDATE attendance
+                                SET
+                                    status = 'Absent',
+                                    time_in = NULL,
+                                    time_out = NULL
+                                WHERE id = '$attendance_id'
+                            ";
+
+                            pg_query($conn, $updateAbsentQuery);
+                        }
+                    }
                 }
             }
         }
     }
 }
 
+/*
+|--------------------------------------------------------------------------
+| FETCH ATTENDANCE LIST
+|--------------------------------------------------------------------------
+*/
+
 $attendanceQuery = "
     SELECT *
     FROM attendance
-    WHERE instructor_name='$instructor_name'
+    WHERE LOWER(TRIM(instructor_name))
+        = LOWER(TRIM('$instructor_name'))
     ORDER BY date DESC, time_in DESC
 ";
 
@@ -195,23 +296,32 @@ $attendanceResult = pg_query($conn, $attendanceQuery);
 
 $attendanceList = [];
 
-while ($row = pg_fetch_assoc($attendanceResult)) {
-    $attendanceList[] = $row;
+if ($attendanceResult) {
+
+    while ($row = pg_fetch_assoc($attendanceResult)) {
+        $attendanceList[] = $row;
+    }
 }
+
+/*
+|--------------------------------------------------------------------------
+| COUNTS
+|--------------------------------------------------------------------------
+*/
 
 $present = count(array_filter(
     $attendanceList,
-    fn($a) => $a['status'] == 'Present'
+    fn($a) => strtolower(trim($a['status'])) == 'present'
 ));
 
 $absent = count(array_filter(
     $attendanceList,
-    fn($a) => $a['status'] == 'Absent'
+    fn($a) => strtolower(trim($a['status'])) == 'absent'
 ));
 
 $late = count(array_filter(
     $attendanceList,
-    fn($a) => $a['status'] == 'Late'
+    fn($a) => strtolower(trim($a['status'])) == 'late'
 ));
 ?>
 <!DOCTYPE html>
@@ -384,21 +494,8 @@ $late = count(array_filter(
                             <td><?php echo htmlspecialchars($row['year_level']); ?></td>
                             <td><?php echo htmlspecialchars($row['section']); ?></td>
                             <td><?php echo htmlspecialchars($row['date']); ?></td>
-                            <td>
-                                <?php
-                                    echo (!empty($row['time_in']) && $row['time_in'] != '00:00:00')
-                                        ? date("g:i A", strtotime($row['time_in']))
-                                        : 'No Data';
-                                ?>
-                            </td>
-
-                            <td>
-                                <?php
-                                    echo (!empty($row['time_out']) && $row['time_out'] != '00:00:00')
-                                        ? date("g:i A", strtotime($row['time_out']))
-                                        : 'No Data';
-                                ?>
-                            </td>
+                            <td><?php echo !empty($row['time_in']) ? date("g:i A", strtotime($row['time_in'])) : '-'; ?></td>
+                            <td><?php echo !empty($row['time_out']) ? date("g:i A", strtotime($row['time_out'])) : '-'; ?></td>
                             <td><?php echo htmlspecialchars($row['status']); ?></td>
                         </tr>
                     <?php endforeach; ?>
