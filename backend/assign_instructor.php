@@ -8,6 +8,7 @@ if (isset($_POST['assign'])) {
     $instructor = pg_escape_string($conn, $_POST['instructor_name']);
     $year = pg_escape_string($conn, $_POST['year_level']);
     $section = pg_escape_string($conn, $_POST['section']);
+    $day = pg_escape_string($conn, $_POST['day']);
     $subject = pg_escape_string($conn, $_POST['subject']);
     $room = pg_escape_string($conn, $_POST['room']);
     $start = pg_escape_string($conn, $_POST['start_time']);
@@ -23,6 +24,7 @@ if (isset($_POST['assign'])) {
                 instructor_name = '$instructor',
                 year_level = '$year',
                 section = '$section',
+                day = '$day',
                 subject = '$subject',
                 room = '$room',
                 start_time = '$start',
@@ -37,6 +39,7 @@ if (isset($_POST['assign'])) {
                 instructor_name,
                 year_level,
                 section,
+                day,
                 subject,
                 room,
                 start_time,
@@ -46,6 +49,7 @@ if (isset($_POST['assign'])) {
                 '$instructor',
                 '$year',
                 '$section',
+                '$day',
                 '$subject',
                 '$room',
                 '$start',

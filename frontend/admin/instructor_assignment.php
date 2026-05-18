@@ -217,6 +217,16 @@ $adminEmail = $_SESSION['email'] ?? 'admin@evsu.edu.ph';
                         <option value="D">D</option>
                     </select>
 
+                    <select name="day" id="day" required>
+                        <option value="">Select Day</option>
+                        <option value="Monday">Monday</option>
+                        <option value="Tuesday">Tuesday</option>
+                        <option value="Wednesday">Wednesday</option>
+                        <option value="Thursday">Thursday</option>
+                        <option value="Friday">Friday</option>
+                        <option value="Saturday">Saturday</option>
+                    </select>
+
                     <div class="subject-search-container">
 
                         <input type="text"
@@ -276,6 +286,7 @@ $adminEmail = $_SESSION['email'] ?? 'admin@evsu.edu.ph';
                         <th>Instructor Name</th>
                         <th>Year</th>
                         <th>Section</th>
+                        <th>Day</th>
                         <th>Subject</th>
                         <th>Room</th>
                         <th>Time</th>
@@ -300,6 +311,8 @@ $adminEmail = $_SESSION['email'] ?? 'admin@evsu.edu.ph';
                         <td><?php echo htmlspecialchars($row['year_level']); ?></td>
 
                         <td><?php echo htmlspecialchars($row['section']); ?></td>
+
+                        <td><?php echo htmlspecialchars($row['day'] ?? ''); ?></td>
 
                         <td><?php echo htmlspecialchars($row['subject']); ?></td>
 
@@ -438,9 +451,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const section = row.cells[2].textContent.trim();
 
-            const subject = row.cells[3].textContent.trim();
+            const day = row.cells[3].textContent.trim();
 
-            const room = row.cells[4].textContent.trim();
+            const subject = row.cells[4].textContent.trim();
+
+            const room = row.cells[5].textContent.trim();
 
             document.getElementById("edit_id").value = id;
 
@@ -458,13 +473,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
             document.getElementById("section").value = section;
 
+            document.getElementById("day").value = day;
+
             document.getElementById("subjectInput").value = subject;
 
             document.getElementById("subject").value = subject;
 
             document.getElementById("room").value = room;
 
-            const timeRange = row.cells[5].textContent.trim().split(" - ");
+            const timeRange = row.cells[6].textContent.trim().split(" - ");
 
             if (timeRange.length === 2) {
 

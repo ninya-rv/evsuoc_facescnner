@@ -5,6 +5,7 @@ if(isset(
     $_POST['id'],
     $_POST['year_level'],
     $_POST['section'],
+    $_POST['day'],
     $_POST['subject'],
     $_POST['room'],
     $_POST['start_time'],
@@ -14,6 +15,7 @@ if(isset(
     $id = pg_escape_string($conn, $_POST['id']);
     $year = pg_escape_string($conn, $_POST['year_level']);
     $section = pg_escape_string($conn, $_POST['section']);
+    $day = pg_escape_string($conn, $_POST['day']);
     $subject = pg_escape_string($conn, $_POST['subject']);
     $room = pg_escape_string($conn, $_POST['room']);
     $start = pg_escape_string($conn, $_POST['start_time']);
@@ -24,6 +26,7 @@ if(isset(
         SET
             year_level='$year',
             section='$section',
+            day='$day',
             subject='$subject',
             room='$room',
             start_time='$start',
