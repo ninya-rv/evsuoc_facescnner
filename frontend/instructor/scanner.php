@@ -61,7 +61,7 @@ $instructor_name = pg_escape_string($conn, $instructorName);
 $classQuery = "
     SELECT *
     FROM instructor_assignment
-    WHERE instructor_name = '$instructor_name'
+    WHERE LOWER(TRIM(instructor_name)) = LOWER(TRIM('$instructor_name'))
     ORDER BY start_time ASC
 ";
 

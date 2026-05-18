@@ -58,7 +58,7 @@ $instructor_name = pg_escape_string($conn, $instructorName);
 $subjectQuery = "
     SELECT DISTINCT subject
     FROM instructor_assignment
-    WHERE instructor_name = '$instructor_name'
+    WHERE LOWER(TRIM(instructor_name)) = LOWER(TRIM('$instructor_name'))
     ORDER BY subject ASC
 ";
 
@@ -79,7 +79,7 @@ $currentTime = date("H:i:s");
 $assignmentQuery = "
     SELECT *
     FROM instructor_assignment
-    WHERE instructor_name = '$instructor_name'
+    WHERE LOWER(TRIM(instructor_name)) = LOWER(TRIM('$instructor_name'))
 ";
 
 $assignmentResult = pg_query($conn, $assignmentQuery);
@@ -97,8 +97,8 @@ while ($assignment = pg_fetch_assoc($assignmentResult)) {
             SELECT *
             FROM students
             WHERE status = 'active'
-            AND year = '$year_level'
-            AND section = '$section'
+            AND LOWER(TRIM(year)) = LOWER(TRIM('$year_level'))
+            AND LOWER(TRIM(section)) = LOWER(TRIM('$section'))
         ";
 
         $studentResult = pg_query($conn, $studentQuery);

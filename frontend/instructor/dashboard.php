@@ -60,7 +60,7 @@ $assignmentQuery = pg_query_params(
     $conn,
     "SELECT DISTINCT year_level, section
      FROM instructor_assignment
-     WHERE instructor_name = $1",
+     WHERE LOWER(TRIM(instructor_name)) = LOWER(TRIM($1))",
     [$instructorName]
 );
 
@@ -70,10 +70,10 @@ if ($assignmentQuery && pg_num_rows($assignmentQuery) > 0) {
 
     while ($assignment = pg_fetch_assoc($assignmentQuery)) {
 
-        $year = pg_escape_string($conn, $assignment['year_level']);
-        $section = pg_escape_string($conn, $assignment['section']);
+        $year = trim(pg_escape_string($conn, $assignment['year_level']));
+        $section = trim(pg_escape_string($conn, $assignment['section']));
 
-        $conditions[] = "(year = '{$year}' AND section = '{$section}')";
+        $conditions[] = "(LOWER(TRIM(year)) = LOWER('{$year}') AND LOWER(TRIM(section)) = LOWER('{$section}'))";
     }
 }
 
