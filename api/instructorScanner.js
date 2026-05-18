@@ -88,6 +88,7 @@ document.addEventListener("DOMContentLoaded", () => {
             year_level: option.dataset.year,
             section: option.dataset.section,
             subject: option.dataset.subject,
+            day: option.dataset.day,
             start_time: option.dataset.start,
             end_time: option.dataset.end,
             mode: scanMode
@@ -177,6 +178,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 subject: selectedClass.subject,
                 year_level: selectedClass.year_level,
                 section: selectedClass.section,
+                day: selectedClass.day,
                 start_time: selectedClass.start_time,
                 end_time: selectedClass.end_time,
                 mode: selectedClass.mode

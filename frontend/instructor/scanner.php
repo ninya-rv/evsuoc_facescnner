@@ -18,6 +18,7 @@ $instructor_id = $_SESSION['user_id'];
 
 $manilaNow = new DateTime('now', new DateTimeZone('Asia/Manila'));
 $currentDate = $manilaNow->format('Y-m-d');
+$currentDay = $manilaNow->format('l');
 
 $instructorQuery = "
     SELECT name, email
@@ -160,26 +161,33 @@ $classResult = pg_query($conn, $classQuery);
                 <?php if ($classResult && pg_num_rows($classResult) > 0): ?>
                     <?php while ($class = pg_fetch_assoc($classResult)): ?>
                         <?php 
-                    $classEndTimestamp = strtotime($currentDate . ' ' . $class['end_time']);
-                    $isEnded = $classEndTimestamp < $manilaNow->getTimestamp();
-                ?>
-                <option 
+                            $classDay = trim($class['day'] ?? '');
+                            $classEndTimestamp = strtotime($currentDate . ' ' . $class['end_time']);
+                            $isEnded = $classEndTimestamp < $manilaNow->getTimestamp();
+                            $isToday = strcasecmp($classDay, $currentDay) === 0;
+                            $disabled = $isEnded || !$isToday ? 'disabled' : '';
+                        ?>
+                        <option 
                             value="<?php echo $class['id']; ?>"
                             data-year="<?php echo htmlspecialchars($class['year_level']); ?>"
                             data-section="<?php echo htmlspecialchars($class['section']); ?>"
                             data-subject="<?php echo htmlspecialchars($class['subject']); ?>"
+                            data-day="<?php echo htmlspecialchars($classDay); ?>"
                             data-start="<?php echo htmlspecialchars($class['start_time']); ?>"
                             data-end="<?php echo htmlspecialchars($class['end_time']); ?>"
-                            <?php echo $isEnded ? 'disabled' : ''; ?>
+                            <?php echo $disabled; ?>
                         >
                             <?php 
-                            echo htmlspecialchars($class['subject']) . " | " . 
+                            echo htmlspecialchars($class['day']) . ' | ' .
+                                 htmlspecialchars($class['subject']) . " | " . 
                                  htmlspecialchars($class['year_level']) . " | Section " . 
                                  htmlspecialchars($class['section']) . " | " . 
                                  date("g:i A", strtotime($class['start_time'])) . " - " . 
                                  date("g:i A", strtotime($class['end_time']));
                             if ($isEnded) {
                                 echo ' (Ended)';
+                            } elseif (!$isToday) {
+                                echo ' (Not today)';
                             }
                             ?>
                         </option>

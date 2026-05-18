@@ -258,33 +258,48 @@ $late = count(array_filter(
 
     const table = document.getElementById("attendanceTable");
     const rows = table.getElementsByTagName("tr");
+    const headerCells = Array.from(table.closest("table").querySelectorAll("thead th"));
+    const headerIndex = (name) => headerCells.findIndex(th => th.textContent.toLowerCase().trim() === name.toLowerCase().trim());
 
     function filterTable() {
-        const searchValue = searchInput.value.toLowerCase();
-        const yearValue = filterYear.value.toLowerCase();
+        const searchValue = searchInput.value.toLowerCase().trim();
+        const yearValue = filterYear.value.toLowerCase().trim();
         const dateValue = filterDate.value;
-        const statusValue = filterStatus.value.toLowerCase();
+        const statusValue = filterStatus.value.toLowerCase().trim();
+
+        const studentIdIdx = headerIndex("student id");
+        const nameIdx = headerIndex("name");
+        const emailIdx = headerIndex("email");
+        const yearIdx = headerIndex("year");
+        const dateIdx = headerIndex("date");
+        const statusIdx = headerIndex("status");
 
         for (let i = 0; i < rows.length; i++) {
             let cols = rows[i].getElementsByTagName("td");
 
             if (cols.length === 0) continue;
 
-            let studentID = cols[0].textContent.toLowerCase();
-            let name = cols[1].textContent.toLowerCase();
-            let email = cols[2].textContent.toLowerCase();
-            let year = cols[3].textContent.toLowerCase();
-            let date = cols[4].textContent;
-            let status = cols[7] ? cols[7].textContent.toLowerCase() : "";
+            let studentID = cols[studentIdIdx]?.textContent.toLowerCase() || "";
+            let name = cols[nameIdx]?.textContent.toLowerCase() || "";
+            let email = cols[emailIdx]?.textContent.toLowerCase() || "";
+            let year = cols[yearIdx]?.textContent.toLowerCase() || "";
+            let date = cols[dateIdx]?.textContent || "";
+            let status = cols[statusIdx]?.textContent.toLowerCase() || "";
 
             let matchSearch =
                 studentID.includes(searchValue) ||
                 name.includes(searchValue) ||
                 email.includes(searchValue);
 
-            let matchYear = !yearValue || year.includes(yearValue);
+            let matchYear =
+                !yearValue ||
+                year.includes(yearValue) ||
+                yearValue.includes(year);
+
             let matchDate = !dateValue || date === dateValue;
-            let matchStatus = !statusValue || status === statusValue;
+            let matchStatus =
+                !statusValue ||
+                status.includes(statusValue);
 
             if (matchSearch && matchYear && matchDate && matchStatus) {
                 rows[i].style.display = "";

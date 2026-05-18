@@ -77,6 +77,7 @@ if ($subjectResult && pg_num_rows($subjectResult) > 0) {
 
 $currentDate = date("Y-m-d");
 $currentTime = date("H:i:s");
+$currentDay = date("l");
 
 $assignmentQuery = "
     SELECT *
@@ -156,6 +157,7 @@ if ($assignmentResult) {
                                 subject,
                                 year_level,
                                 section,
+                                day,
                                 date,
                                 time_in,
                                 time_out,
@@ -169,6 +171,7 @@ if ($assignmentResult) {
                                 '$subject',
                                 '$year_level',
                                 '$section',
+                                '$currentDay',
                                 '$currentDate',
                                 NULL,
                                 NULL,
@@ -204,6 +207,7 @@ if ($assignmentResult) {
                                 UPDATE attendance
                                 SET
                                     status = 'Absent',
+                                    day = '$currentDay',
                                     time_in = NULL,
                                     time_out = NULL
                                 WHERE id = '$attendance_id'
@@ -384,6 +388,18 @@ $late = count(array_filter(
                     </select>
                 </div>
                 <div class="filter-group">
+                    <label>Day</label>
+                    <select id="filterDay">
+                        <option value="">All</option>
+                        <option value="Monday">Monday</option>
+                        <option value="Tuesday">Tuesday</option>
+                        <option value="Wednesday">Wednesday</option>
+                        <option value="Thursday">Thursday</option>
+                        <option value="Friday">Friday</option>
+                        <option value="Saturday">Saturday</option>
+                    </select>
+                </div>
+                <div class="filter-group">
                     <label>Date</label>
                     <input type="date" id="filterDate">
                 </div>
@@ -407,6 +423,7 @@ $late = count(array_filter(
                     <th>Subject</th>
                     <th>Year</th>
                     <th>Section</th>
+                    <th>Day</th>
                     <th>Date</th>
                     <th>Time In</th>
                     <th>Time Out</th>
@@ -423,6 +440,7 @@ $late = count(array_filter(
                             <td><?php echo htmlspecialchars($row['subject']); ?></td>
                             <td><?php echo htmlspecialchars($row['year_level']); ?></td>
                             <td><?php echo htmlspecialchars($row['section']); ?></td>
+                            <td><?php echo htmlspecialchars($row['day'] ?? '-'); ?></td>
                             <td><?php echo htmlspecialchars($row['date']); ?></td>
                             <td><?php echo !empty($row['time_in']) ? date("g:i A", strtotime($row['time_in'])) : '-'; ?></td>
                             <td><?php echo !empty($row['time_out']) ? date("g:i A", strtotime($row['time_out'])) : '-'; ?></td>
@@ -431,7 +449,7 @@ $late = count(array_filter(
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="10" style="text-align:center;">No attendance records found.</td>
+                        <td colspan="11" style="text-align:center;">No attendance records found.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>
@@ -467,7 +485,7 @@ $late = count(array_filter(
         if (row.style.display === "none") return;
 
         const cols = row.querySelectorAll("td");
-        if (cols.length === 10) {
+        if (cols.length === 11) {
 
             tableData.push([
                 cols[0].textContent.trim(), 
@@ -479,7 +497,8 @@ $late = count(array_filter(
                 cols[6].textContent.trim(), 
                 cols[7].textContent.trim(), 
                 cols[8].textContent.trim(), 
-                cols[9].textContent.trim()  
+                cols[9].textContent.trim(), 
+                cols[10].textContent.trim()  
             ]);
         }
     });
@@ -498,6 +517,7 @@ $late = count(array_filter(
             "Subject",
             "Year",
             "Section",
+            "Day",
             "Date",
             "Time In",
             "Time Out",

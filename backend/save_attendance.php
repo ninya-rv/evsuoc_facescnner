@@ -58,6 +58,7 @@ $email = pg_escape_string($conn, $data['email'] ?? '');
 $subject = pg_escape_string($conn, $data['subject'] ?? '');
 $year_level = pg_escape_string($conn, $data['year_level'] ?? '');
 $section = pg_escape_string($conn, $data['section'] ?? '');
+$day = pg_escape_string($conn, $data['day'] ?? '');
 $start_time = pg_escape_string($conn, $data['start_time'] ?? '');
 $end_time = pg_escape_string($conn, $data['end_time'] ?? '');
 $mode = $data['mode'] ?? 'time_in';
@@ -136,10 +137,11 @@ if ($student['status'] === 'inactive') {
 $assignCheck = "
     SELECT * 
     FROM instructor_assignment
-    WHERE instructor_name='$instructor_name'
-    AND subject='$subject'
-    AND year_level='$year_level'
-    AND section='$section'
+    WHERE LOWER(TRIM(instructor_name)) = LOWER(TRIM('$instructor_name'))
+    AND LOWER(TRIM(subject)) = LOWER(TRIM('$subject'))
+    AND LOWER(TRIM(year_level)) = LOWER(TRIM('$year_level'))
+    AND LOWER(TRIM(section)) = LOWER(TRIM('$section'))
+    AND LOWER(TRIM(day)) = LOWER(TRIM('$day'))
     LIMIT 1
 ";
 
@@ -227,6 +229,7 @@ $insertQuery = "
         subject,
         year_level,
         section,
+        day,
         date,
         time_in,
         status
@@ -240,6 +243,7 @@ $insertQuery = "
         '$subject',
         '$year_level',
         '$section',
+        '$day',
         '$date',
         '$currentTime',
         '$status'

@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const filterPanel = document.getElementById("filterPanel");
     const filterYear = document.getElementById("filterYear");
     const filterSection = document.getElementById("filterSection");
+    const filterDay = document.getElementById("filterDay");
     const filterSubject = document.getElementById("filterSubject");
     const filterDate = document.getElementById("filterDate");
     const filterStatus = document.getElementById("filterStatus");
@@ -34,6 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 (searchInput && searchInput.value.trim() !== "") ||
                 (filterYear && filterYear.value.trim() !== "") ||
                 (filterSection && filterSection.value.trim() !== "") ||
+                (filterDay && filterDay.value.trim() !== "") ||
                 (filterSubject && filterSubject.value.trim() !== "") ||
                 (filterDate && filterDate.value.trim() !== "") ||
                 (filterStatus && filterStatus.value.trim() !== "")
@@ -64,6 +66,16 @@ document.addEventListener("DOMContentLoaded", () => {
                     '<i class="fa-solid fa-filter"></i>';
             }
         });
+    }
+
+    const tableHeaders = pageTable
+        ? Array.from(pageTable.querySelectorAll("thead th")).map(th =>
+            th.textContent.toLowerCase().trim()
+        )
+        : [];
+
+    function getHeaderIndex(name) {
+        return tableHeaders.indexOf(name.toLowerCase().trim());
     }
 
     function getRows() {
@@ -198,6 +210,11 @@ document.addEventListener("DOMContentLoaded", () => {
             ? filterSubject.value.toLowerCase().trim()
             : "";
 
+        const dayVal =
+            filterDay
+            ? filterDay.value.toLowerCase().trim()
+            : "";
+
         const dateVal =
             filterDate
             ? filterDate.value.trim()
@@ -224,26 +241,33 @@ document.addEventListener("DOMContentLoaded", () => {
 
             let matchesDate = true;
 
+            let matchesDay = true;
+
             let matchesStatus = true;
 
             if (pageType === "assignment") {
 
+                const instructorIndex = getHeaderIndex("instructor");
+                const yearIndex = getHeaderIndex("year");
+                const sectionIndex = getHeaderIndex("section");
+                const subjectIndex = getHeaderIndex("subject");
+
                 const instructor =
-                    row.cells[0]?.textContent
+                    row.cells[instructorIndex]?.textContent
                     .toLowerCase() || "";
 
                 const year =
-                    row.cells[1]?.textContent
+                    row.cells[yearIndex]?.textContent
                     .toLowerCase()
                     .trim() || "";
 
                 const section =
-                    row.cells[2]?.textContent
+                    row.cells[sectionIndex]?.textContent
                     .toLowerCase()
                     .trim() || "";
 
                 const subject =
-                    row.cells[3]?.textContent
+                    row.cells[subjectIndex]?.textContent
                     .toLowerCase()
                     .trim() || "";
 
@@ -265,29 +289,48 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (pageType === "attendance") {
 
+                const studentIdIndex = getHeaderIndex("student id");
+                const nameIndex = getHeaderIndex("name");
+                const emailIndex = getHeaderIndex("email");
+                const yearIndex = getHeaderIndex("year");
+                const sectionIndex = getHeaderIndex("section");
+                const dayIndex = getHeaderIndex("day");
+                const dateIndex = getHeaderIndex("date");
+                const statusIndex = getHeaderIndex("status");
+
                 const studentId =
-                    row.cells[0]?.textContent
+                    row.cells[studentIdIndex]?.textContent
                     .toLowerCase() || "";
 
                 const name =
-                    row.cells[1]?.textContent
+                    row.cells[nameIndex]?.textContent
                     .toLowerCase() || "";
 
                 const email =
-                    row.cells[2]?.textContent
+                    row.cells[emailIndex]?.textContent
                     .toLowerCase() || "";
 
                 const year =
-                    row.cells[3]?.textContent
+                    row.cells[yearIndex]?.textContent
+                    .toLowerCase()
+                    .trim() || "";
+
+                const section =
+                    row.cells[sectionIndex]?.textContent
+                    .toLowerCase()
+                    .trim() || "";
+
+                const day =
+                    row.cells[dayIndex]?.textContent
                     .toLowerCase()
                     .trim() || "";
 
                 const date =
-                    row.cells[4]?.textContent
+                    row.cells[dateIndex]?.textContent
                     .trim() || "";
 
                 const status =
-                    row.cells[7]?.textContent
+                    row.cells[statusIndex]?.textContent
                     .toLowerCase()
                     .trim() || "";
 
@@ -299,6 +342,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 matchesYear =
                     yearVal === "" ||
                     year === yearVal;
+
+                matchesSection =
+                    sectionVal === "" ||
+                    section === sectionVal;
+
+                matchesDay =
+                    dayVal === "" ||
+                    day === dayVal;
 
                 matchesDate =
                     dateVal === "" ||
@@ -314,6 +365,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 matchesYear &&
                 matchesSection &&
                 matchesSubject &&
+                matchesDay &&
                 matchesDate &&
                 matchesStatus
             )
@@ -334,6 +386,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (filterSection) {
             filterSection.value = "";
+        }
+
+        if (filterDay) {
+            filterDay.value = "";
         }
 
         if (filterSubject) {
@@ -378,6 +434,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (filterSection) {
         filterSection.addEventListener(
+            "change",
+            applyFilters
+        );
+    }
+
+    if (filterDay) {
+        filterDay.addEventListener(
             "change",
             applyFilters
         );
