@@ -11,9 +11,10 @@ Requirements
 Make sure the following are installed on your system:
 - PHP 8.0 or newer
 - Composer
-- MySQL
-- Git
-- XAMPP / WAMP (for local server)
+- Supabase
+- Github Desktop
+- Brevo
+- Railway
 
 ## Check your PHP version:
 
