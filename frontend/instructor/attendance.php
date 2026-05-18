@@ -91,8 +91,10 @@ while ($assignment = pg_fetch_assoc($assignmentResult)) {
     $section    = pg_escape_string($conn, $assignment['section']);
     $end_time   = $assignment['end_time'];
 
-    if ($currentTime >= $end_time) {
+    // CHECK IF CLASS ALREADY ENDED
+    if (strtotime($currentTime) >= strtotime($end_time)) {
 
+        // GET ALL ACTIVE STUDENTS
         $studentQuery = "
             SELECT *
             FROM students
@@ -109,8 +111,9 @@ while ($assignment = pg_fetch_assoc($assignmentResult)) {
             $name       = pg_escape_string($conn, $student['name']);
             $email      = pg_escape_string($conn, $student['email']);
 
-            $checkAttendance = "
-                SELECT id
+            // CHECK IF STUDENT ALREADY HAS ATTENDANCE TODAY
+            $attendanceCheckQuery = "
+                SELECT *
                 FROM attendance
                 WHERE student_id = '$student_id'
                 AND subject = '$subject'
@@ -118,11 +121,12 @@ while ($assignment = pg_fetch_assoc($assignmentResult)) {
                 LIMIT 1
             ";
 
-            $checkResult = pg_query($conn, $checkAttendance);
+            $attendanceCheckResult = pg_query($conn, $attendanceCheckQuery);
 
-            if (pg_num_rows($checkResult) == 0) {
+            // IF NO RECORD -> INSERT ABSENT
+            if (pg_num_rows($attendanceCheckResult) == 0) {
 
-                $insertAbsent = "
+                $insertAbsentQuery = "
                     INSERT INTO attendance (
                         student_id,
                         name,
@@ -151,7 +155,30 @@ while ($assignment = pg_fetch_assoc($assignmentResult)) {
                     )
                 ";
 
-                pg_query($conn, $insertAbsent);
+                pg_query($conn, $insertAbsentQuery);
+            }
+            else {
+
+                // UPDATE RECORD IF NO TIME IN
+                $attendanceData = pg_fetch_assoc($attendanceCheckResult);
+
+                if (
+                    empty($attendanceData['time_in']) &&
+                    empty($attendanceData['time_out'])
+                ) {
+
+                    $attendance_id = $attendanceData['id'];
+
+                    $updateAbsentQuery = "
+                        UPDATE attendance
+                        SET status = 'Absent',
+                            time_in = NULL,
+                            time_out = NULL
+                        WHERE id = '$attendance_id'
+                    ";
+
+                    pg_query($conn, $updateAbsentQuery);
+                }
             }
         }
     }
@@ -357,8 +384,21 @@ $late = count(array_filter(
                             <td><?php echo htmlspecialchars($row['year_level']); ?></td>
                             <td><?php echo htmlspecialchars($row['section']); ?></td>
                             <td><?php echo htmlspecialchars($row['date']); ?></td>
-                            <td><?php echo !empty($row['time_in']) ? date("g:i A", strtotime($row['time_in'])) : '-'; ?></td>
-                            <td><?php echo !empty($row['time_out']) ? date("g:i A", strtotime($row['time_out'])) : '-'; ?></td>
+                            <td>
+                                <?php
+                                    echo (!empty($row['time_in']) && $row['time_in'] != '00:00:00')
+                                        ? date("g:i A", strtotime($row['time_in']))
+                                        : 'No Data';
+                                ?>
+                            </td>
+
+                            <td>
+                                <?php
+                                    echo (!empty($row['time_out']) && $row['time_out'] != '00:00:00')
+                                        ? date("g:i A", strtotime($row['time_out']))
+                                        : 'No Data';
+                                ?>
+                            </td>
                             <td><?php echo htmlspecialchars($row['status']); ?></td>
                         </tr>
                     <?php endforeach; ?>
