@@ -4,12 +4,6 @@ include "../../backend/db.php";
 
 date_default_timezone_set("Asia/Manila");
 
-/*
-|--------------------------------------------------------------------------
-| SESSION CHECK
-|--------------------------------------------------------------------------
-*/
-
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../../index.php");
     exit;
@@ -19,12 +13,6 @@ if ($_SESSION['role'] !== 'instructor') {
     header("Location: ../admin/dashboard.php");
     exit;
 }
-
-/*
-|--------------------------------------------------------------------------
-| GET INSTRUCTOR INFO
-|--------------------------------------------------------------------------
-*/
 
 $instructor_id = $_SESSION['user_id'];
 
@@ -69,12 +57,6 @@ if ($instructorResult && pg_num_rows($instructorResult) > 0) {
 
 $instructor_name = pg_escape_string($conn, trim($instructorName));
 
-/*
-|--------------------------------------------------------------------------
-| GET SUBJECT LIST
-|--------------------------------------------------------------------------
-*/
-
 $subjectQuery = "
     SELECT DISTINCT subject
     FROM instructor_assignment
@@ -92,12 +74,6 @@ if ($subjectResult && pg_num_rows($subjectResult) > 0) {
         $subjectList[] = $subjectRow['subject'];
     }
 }
-
-/*
-|--------------------------------------------------------------------------
-| AUTO INSERT ABSENT STUDENTS
-|--------------------------------------------------------------------------
-*/
 
 $currentDate = date("Y-m-d");
 $currentTime = date("H:i:s");
@@ -119,19 +95,7 @@ if ($assignmentResult) {
         $section    = pg_escape_string($conn, trim($assignment['section']));
         $end_time   = trim($assignment['end_time']);
 
-        /*
-        |--------------------------------------------------------------------------
-        | CHECK IF CLASS ENDED
-        |--------------------------------------------------------------------------
-        */
-
         if (strtotime($currentTime) >= strtotime($end_time)) {
-
-            /*
-            |--------------------------------------------------------------------------
-            | GET ACTIVE STUDENTS
-            |--------------------------------------------------------------------------
-            */
 
             $studentQuery = "
                 SELECT *
@@ -162,12 +126,6 @@ if ($assignmentResult) {
                         trim($student['email'])
                     );
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | CHECK IF STUDENT ALREADY HAS ATTENDANCE
-                    |--------------------------------------------------------------------------
-                    */
-
                     $attendanceCheckQuery = "
                         SELECT id, time_in, time_out, status
                         FROM attendance
@@ -183,12 +141,6 @@ if ($assignmentResult) {
                         $conn,
                         $attendanceCheckQuery
                     );
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | IF NO RECORD -> INSERT ABSENT
-                    |--------------------------------------------------------------------------
-                    */
 
                     if (
                         $attendanceCheckResult &&
@@ -229,12 +181,6 @@ if ($assignmentResult) {
                             $insertAbsentQuery
                         );
 
-                        /*
-                        |--------------------------------------------------------------------------
-                        | DEBUG INSERT ERROR
-                        |--------------------------------------------------------------------------
-                        */
-
                         if (!$insertResult) {
                             echo "<pre>";
                             echo pg_last_error($conn);
@@ -242,12 +188,6 @@ if ($assignmentResult) {
                         }
 
                     } else {
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | UPDATE RECORD IF NO TIME IN / OUT
-                        |--------------------------------------------------------------------------
-                        */
 
                         $attendanceData = pg_fetch_assoc(
                             $attendanceCheckResult
@@ -278,11 +218,6 @@ if ($assignmentResult) {
     }
 }
 
-/*
-|--------------------------------------------------------------------------
-| FETCH ATTENDANCE LIST
-|--------------------------------------------------------------------------
-*/
 
 $attendanceQuery = "
     SELECT *
@@ -303,11 +238,6 @@ if ($attendanceResult) {
     }
 }
 
-/*
-|--------------------------------------------------------------------------
-| COUNTS
-|--------------------------------------------------------------------------
-*/
 
 $present = count(array_filter(
     $attendanceList,
