@@ -202,6 +202,21 @@ if (!empty($conditions)) {
             </div>
         </div>
         <section class="student-section">
+            <div class="assigned-classes">
+                <h4>Assigned Sections</h4>
+                <?php if (!empty($assignedClasses)): ?>
+                    <ul class="assigned-list">
+                        <?php foreach ($assignedClasses as $class): ?>
+                            <li>
+                                <?php echo htmlspecialchars($class['year'] . ' | Section ' . $class['section']); ?>
+                                (<?php echo $class['student_count']; ?> students)
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php else: ?>
+                    <p>No assigned sections found.</p>
+                <?php endif; ?>
+            </div>
             <h4>Student List</h4>
             <br>
             <div class="search-filter">
