@@ -222,6 +222,7 @@ if ($assignmentResult) {
     }
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | TODAY'S ATTENDANCE COUNTS
@@ -294,7 +295,6 @@ if ($attendanceResult) {
     }
 }
 ?>
-?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -366,21 +366,24 @@ if ($attendanceResult) {
             ?></p>
         </div>
 
-        <div class="card">
-            <h4>Absent</h4>
-            <p><?php 
-                $absent = count(array_filter($attendanceList, fn($a) => $a['status'] == 'Absent')); 
-                echo $absent;
-            ?></p>
-        </div>
+     <div class="cards">
 
-        <div class="card">
-            <h4>Late</h4>
-            <p><?php 
-                $late = count(array_filter($attendanceList, fn($a) => $a['status'] == 'Late')); 
-                echo $late;
-            ?></p>
-        </div>
+    <div class="card">
+        <h4>Present</h4>
+        <p><?php echo $present; ?></p>
+    </div>
+
+    <div class="card">
+        <h4>Absent</h4>
+        <p><?php echo $absent; ?></p>
+    </div>
+
+    <div class="card">
+        <h4>Late</h4>
+        <p><?php echo $late; ?></p>
+    </div>
+
+</div>
     </div>
     <div class="student-section">
         <h4>Student Attendance</h4>
