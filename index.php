@@ -347,6 +347,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="footer">
                 By using this service, you understood and agree to the
                 EVSU Online Services Terms of Use and Privacy Statement
+                (testing)
             </div>
 
         </div>
