@@ -17,47 +17,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    $first_name = trim($data['first_name'] ?? '');
-    $last_name = trim($data['last_name'] ?? '');
-    $email = trim($data['email'] ?? '');
-    $password = $data['password'] ?? '';
-    $role = isset($data['role']) ? trim($data['role']) : 'instructor';
+    $name = mysqli_real_escape_string($conn, $data['name']);
+    $email = mysqli_real_escape_string($conn, $data['email']);
+    $password = mysqli_real_escape_string($conn, $data['password']);
 
-    if (!$first_name || !$last_name || !$email || !$password) {
-        echo json_encode([
-            "success" => false,
-            "message" => "Please fill all fields."
-        ]);
-        exit;
-    }
-
-    $name = trim("$first_name $last_name");
-
-    if (!preg_match('/^[^@\s]+@evsu\.edu\.ph$/i', $email)) {
-        echo json_encode([
-            "success" => false,
-            "message" => "Only @evsu.edu.ph email addresses are accepted."
-        ]);
-        exit;
-    }
-
-    if (strlen($password) < 8 ||
-        !preg_match('/[A-Z]/', $password) ||
-        !preg_match('/[^a-zA-Z0-9]/', $password)) {
-
-        echo json_encode([
-            "success" => false,
-            "message" => "Password must be at least 8 characters and include an uppercase letter plus a symbol."
-        ]);
-        exit;
-    }
-
-    $first_name = pg_escape_string($conn, $first_name);
-    $last_name = pg_escape_string($conn, $last_name);
-    $name = pg_escape_string($conn, $name);
-    $email = pg_escape_string($conn, $email);
-    $password = password_hash($password, PASSWORD_DEFAULT);
-    $role = pg_escape_string($conn, $role);
+    $role = isset($data['role'])
+        ? mysqli_real_escape_string($conn, $data['role'])
+        : 'instructor';
 
     if ($role === 'admin') {
 
@@ -69,59 +35,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // CHECK EXISTING EMAIL (SAFE)
-    $check = "SELECT * FROM users WHERE email = $1";
-    $result = pg_query_params($conn, $check, [$email]);
+    $check = "SELECT * FROM users WHERE email='$email'";
+    $result = mysqli_query($conn, $check);
 
-    if (!$result) {
-        echo json_encode([
-            "success" => false,
-            "message" => "Server query failed."
-        ]);
-        exit;
-    }
+    if (mysqli_num_rows($result) > 0) {
 
-    if (pg_num_rows($result) > 0) {
         echo json_encode([
             "success" => false,
             "message" => "Email already exists."
         ]);
+
         exit;
     }
 
-    $sql = "
-    INSERT INTO users (
-        first_name,
-        last_name,
-        name,
-        email,
-        password,
-        role,
-        status
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7)
-    ";
+    $sql = "INSERT INTO users (name, email, password, role, status)
+            VALUES ('$name', '$email', '$password', '$role', 'inactive')";
 
-    $insert = pg_query_params($conn, $sql, [
-        $first_name,
-        $last_name,
-        $name,
-        $email,
-        $password,
-        $role,
-        'inactive'
-    ]);
+    if (mysqli_query($conn, $sql)) {
 
-    if ($insert) {
         echo json_encode([
             "success" => true,
             "message" => "Account created. Waiting for admin approval."
         ]);
+
     } else {
+
         echo json_encode([
             "success" => false,
-            "message" => pg_last_error($conn)
+            "message" => "Registration failed."
         ]);
     }
+
     exit;
 }
 ?>
@@ -365,15 +309,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <form id="signUpForm">
 
                 <div class="field">
-                    <input id="firstName" type="text" placeholder="First Name" required />
+                    <input id="name" type="text" placeholder="Full Name" required />
                 </div>
 
                 <div class="field">
-                    <input id="lastName" type="text" placeholder="Last Name" required />
-                </div>
-
-                <div class="field">
-                    <input id="email" type="email" placeholder="yourname@evsu.edu.ph" required />
+                    <input id="email" type="email" placeholder="email@example.com" required />
                 </div>
 
                 <div class="field">
@@ -420,25 +360,15 @@ form.addEventListener('submit', async (e) => {
 
     msg.classList.remove('show','error','success');
 
-    const firstName = document.getElementById('firstName').value.trim();
-    const lastName = document.getElementById('lastName').value.trim();
+    const name = document.getElementById('name').value.trim();
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
 
-    const emailValid = /^[^@\s]+@evsu\.edu\.ph$/i;
-    const passwordValid = /^(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,}$/;
-
-    if(!firstName || !lastName || !email || !password || !confirmPassword){
+    if(!name || !email || !password || !confirmPassword){
 
         msg.classList.add('show','error');
         msg.textContent = "Please fill all fields.";
-        return;
-    }
-
-    if (!emailValid.test(email)) {
-        msg.classList.add('show','error');
-        msg.textContent = "Only @evsu.edu.ph email addresses are accepted.";
         return;
     }
 
@@ -446,12 +376,6 @@ form.addEventListener('submit', async (e) => {
 
         msg.classList.add('show','error');
         msg.textContent = "Passwords do not match.";
-        return;
-    }
-
-    if (!passwordValid.test(password)) {
-        msg.classList.add('show','error');
-        msg.textContent = "Password must be at least 8 characters and include an uppercase letter plus a symbol.";
         return;
     }
 
@@ -466,8 +390,7 @@ form.addEventListener('submit', async (e) => {
             },
 
             body:JSON.stringify({
-                first_name: firstName,
-                last_name: lastName,
+                name,
                 email,
                 password,
                 role:'instructor'

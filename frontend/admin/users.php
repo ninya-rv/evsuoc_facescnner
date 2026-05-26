@@ -146,7 +146,7 @@ $inactiveUsers = $inactiveRow['inactive'];
             <li>
                 <a href="users.php">
                     <i class="fa-solid fa-users"></i>
-                    <span>Instructors</span>
+                    <span>Users</span>
                 </a>
             </li>
 
@@ -163,12 +163,12 @@ $inactiveUsers = $inactiveRow['inactive'];
 
     <div class="main">
 
-        <h3>Instructors</h3>
+        <h3>Users</h3>
 
         <div class="cards">
 
             <div class="card">
-                <h4>Total Instructors</h4>
+                <h4>Total Users</h4>
                 <p><?php echo $totalUsers; ?></p>
             </div>
 
@@ -205,17 +205,9 @@ $inactiveUsers = $inactiveRow['inactive'];
 
                     <input
                         type="text"
-                        name="first_name"
-                        id="first_name"
-                        placeholder="First Name"
-                        required
-                    >
-
-                    <input
-                        type="text"
-                        name="last_name"
-                        id="last_name"
-                        placeholder="Last Name"
+                        name="name"
+                        id="name"
+                        placeholder="Full Name"
                         required
                     >
 
@@ -223,7 +215,7 @@ $inactiveUsers = $inactiveRow['inactive'];
                         type="email"
                         name="email"
                         id="email"
-                        placeholder="user@evsu.edu.ph"
+                        placeholder="Email"
                         required
                     >
 
@@ -269,7 +261,7 @@ $inactiveUsers = $inactiveRow['inactive'];
                     SELECT *
                     FROM users
                     WHERE role != 'admin'
-                    ORDER BY first_name ASC
+                    ORDER BY name ASC
                 ";
 
                 $result = pg_query($conn, $sql);
@@ -281,7 +273,7 @@ $inactiveUsers = $inactiveRow['inactive'];
                     <tr data-id="<?php echo $row['id']; ?>">
 
                         <td>
-                            <?php echo htmlspecialchars($row['first_name'] . ' ' . $row['last_name']); ?>
+                            <?php echo htmlspecialchars($row['name']); ?>
                         </td>
 
                         <td>

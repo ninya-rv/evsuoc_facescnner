@@ -1,7 +1,5 @@
 <?php
 session_start();
-header('Content-Type: application/json');
-ini_set('display_errors', 1);
 include __DIR__ . "/backend/db.php";
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -26,8 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$result) {
         echo json_encode([
             "success" => false,
-            "message" => "Database query failed.",
-            "error" => pg_last_error($conn)
+            "message" => "Database query failed."
         ]);
         exit;
     }
@@ -36,43 +33,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $user = pg_fetch_assoc($result);
 
-        if (password_verify($password, $user['password'])) {
+        if ($user['password'] === $password) {
 
-        if ($user['status'] !== "active") {
+            if ($user['status'] !== "active") {
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Account is inactive."
+                ]);
+                exit;
+            }
+
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['name'] = $user['first_name'] . ' ' . $user['last_name'];
+            $_SESSION['email'] = $user['email'];
+            $_SESSION['role'] = $user['role'];
+
+            echo json_encode([
+                "success" => true,
+                "role" => $user['role']
+            ]);
+            exit;
+
+        } else {
 
             echo json_encode([
                 "success" => false,
-                "message" => "Account is inactive."
+                "message" => "Wrong password."
             ]);
-
             exit;
         }
-
-        $_SESSION['user_id'] = $user['id'];
-
-        $_SESSION['name'] =
-            $user['first_name'] . ' ' . $user['last_name'];
-
-        $_SESSION['email'] = $user['email'];
-
-        $_SESSION['role'] = $user['role'];
-
-        echo json_encode([
-            "success" => true,
-            "role" => $user['role']
-        ]);
-
-        exit;
-
-    } else {
-
-        echo json_encode([
-            "success" => false,
-            "message" => "Wrong password."
-        ]);
-
-        exit;
-    }
 
     } else {
 
