@@ -28,7 +28,7 @@ if (strlen($password) < 8 ||
 $first_name = pg_escape_string($conn, $first_name);
 $last_name = pg_escape_string($conn, $last_name);
 $email = pg_escape_string($conn, $email);
-$password = pg_escape_string($conn, $password);
+$password = password_hash($_POST['password'], PASSWORD_DEFAULT);
 
 $name = pg_escape_string($conn, trim("$first_name $last_name"));
 
