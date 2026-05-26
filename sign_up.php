@@ -17,13 +17,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    $name = mysqli_real_escape_string($conn, $data['name']);
-    $email = mysqli_real_escape_string($conn, $data['email']);
-    $password = mysqli_real_escape_string($conn, $data['password']);
+    $name = trim($data['name'] ?? '');
+    $email = trim($data['email'] ?? '');
+    $password = $data['password'] ?? '';
+    $role = isset($data['role']) ? trim($data['role']) : 'instructor';
 
-    $role = isset($data['role'])
-        ? mysqli_real_escape_string($conn, $data['role'])
-        : 'instructor';
+    if (!$name || !$email || !$password) {
+        echo json_encode([
+            "success" => false,
+            "message" => "Please fill all fields."
+        ]);
+        exit;
+    }
+
+    if (!preg_match('/^[^@\s]+@evsu\.edu\.ph$/i', $email)) {
+        echo json_encode([
+            "success" => false,
+            "message" => "Only @evsu.edu.ph email addresses are accepted."
+        ]);
+        exit;
+    }
+
+    if (strlen($password) < 8 ||
+        !preg_match('/[A-Z]/', $password) ||
+        !preg_match('/[^a-zA-Z0-9]/', $password)) {
+
+        echo json_encode([
+            "success" => false,
+            "message" => "Password must be at least 8 characters and include an uppercase letter plus a symbol."
+        ]);
+        exit;
+    }
+
+    $name = pg_escape_string($conn, $name);
+    $email = pg_escape_string($conn, $email);
+    $password = pg_escape_string($conn, $password);
+    $role = pg_escape_string($conn, $role);
 
     if ($role === 'admin') {
 
@@ -36,9 +65,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $check = "SELECT * FROM users WHERE email='$email'";
-    $result = mysqli_query($conn, $check);
+    $result = pg_query($conn, $check);
 
-    if (mysqli_num_rows($result) > 0) {
+    if (!$result) {
+        echo json_encode([
+            "success" => false,
+            "message" => "Server query failed."
+        ]);
+        exit;
+    }
+
+    if (pg_num_rows($result) > 0) {
 
         echo json_encode([
             "success" => false,
@@ -51,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $sql = "INSERT INTO users (name, email, password, role, status)
             VALUES ('$name', '$email', '$password', '$role', 'inactive')";
 
-    if (mysqli_query($conn, $sql)) {
+    if (pg_query($conn, $sql)) {
 
         echo json_encode([
             "success" => true,
@@ -313,7 +350,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
 
                 <div class="field">
-                    <input id="email" type="email" placeholder="email@example.com" required />
+                    <input id="email" type="email" placeholder="yourname@evsu.edu.ph" required />
                 </div>
 
                 <div class="field">
@@ -365,6 +402,9 @@ form.addEventListener('submit', async (e) => {
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
 
+    const emailValid = /^[^@\s]+@evsu\.edu\.ph$/i;
+    const passwordValid = /^(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,}$/;
+
     if(!name || !email || !password || !confirmPassword){
 
         msg.classList.add('show','error');
@@ -372,10 +412,22 @@ form.addEventListener('submit', async (e) => {
         return;
     }
 
+    if (!emailValid.test(email)) {
+        msg.classList.add('show','error');
+        msg.textContent = "Only @evsu.edu.ph email addresses are accepted.";
+        return;
+    }
+
     if(password !== confirmPassword){
 
         msg.classList.add('show','error');
         msg.textContent = "Passwords do not match.";
+        return;
+    }
+
+    if (!passwordValid.test(password)) {
+        msg.classList.add('show','error');
+        msg.textContent = "Password must be at least 8 characters and include an uppercase letter plus a symbol.";
         return;
     }
 

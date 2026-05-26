@@ -146,7 +146,7 @@ $inactiveUsers = $inactiveRow['inactive'];
             <li>
                 <a href="users.php">
                     <i class="fa-solid fa-users"></i>
-                    <span>Users</span>
+                    <span>Instructors</span>
                 </a>
             </li>
 
@@ -163,12 +163,12 @@ $inactiveUsers = $inactiveRow['inactive'];
 
     <div class="main">
 
-        <h3>Users</h3>
+        <h3>Instructors</h3>
 
         <div class="cards">
 
             <div class="card">
-                <h4>Total Users</h4>
+                <h4>Total Instructors</h4>
                 <p><?php echo $totalUsers; ?></p>
             </div>
 
@@ -205,9 +205,17 @@ $inactiveUsers = $inactiveRow['inactive'];
 
                     <input
                         type="text"
-                        name="name"
-                        id="name"
-                        placeholder="Full Name"
+                        name="first_name"
+                        id="first_name"
+                        placeholder="First Name"
+                        required
+                    >
+
+                    <input
+                        type="text"
+                        name="last_name"
+                        id="last_name"
+                        placeholder="Last Name"
                         required
                     >
 
@@ -215,7 +223,7 @@ $inactiveUsers = $inactiveRow['inactive'];
                         type="email"
                         name="email"
                         id="email"
-                        placeholder="Email"
+                        placeholder="user@evsu.edu.ph"
                         required
                     >
 
