@@ -222,7 +222,13 @@ if ($assignmentResult) {
     }
 }
 
-$attendanceQuery = "
+/*
+|--------------------------------------------------------------------------
+| TODAY'S ATTENDANCE COUNTS
+|--------------------------------------------------------------------------
+*/
+
+$todayAttendanceQuery = "
     SELECT DISTINCT ON (student_id)
         *
     FROM attendance
@@ -230,6 +236,50 @@ $attendanceQuery = "
         = LOWER(TRIM('$instructor_name'))
     AND date = '$currentDate'
     ORDER BY student_id, time_in DESC
+";
+
+$todayAttendanceResult = pg_query($conn, $todayAttendanceQuery);
+
+$todayAttendanceList = [];
+
+if ($todayAttendanceResult) {
+
+    while ($row = pg_fetch_assoc($todayAttendanceResult)) {
+
+        $todayAttendanceList[] = $row;
+    }
+}
+
+$present = count(array_filter(
+    $todayAttendanceList,
+    fn($a) =>
+        strtolower(trim($a['status'] ?? '')) === 'present'
+));
+
+$absent = count(array_filter(
+    $todayAttendanceList,
+    fn($a) =>
+        strtolower(trim($a['status'] ?? '')) === 'absent'
+));
+
+$late = count(array_filter(
+    $todayAttendanceList,
+    fn($a) =>
+        strtolower(trim($a['status'] ?? '')) === 'late'
+));
+
+/*
+|--------------------------------------------------------------------------
+| FULL ATTENDANCE HISTORY TABLE
+|--------------------------------------------------------------------------
+*/
+
+$attendanceQuery = "
+    SELECT *
+    FROM attendance
+    WHERE LOWER(TRIM(instructor_name))
+        = LOWER(TRIM('$instructor_name'))
+    ORDER BY date DESC, time_in DESC
 ";
 
 $attendanceResult = pg_query($conn, $attendanceQuery);
@@ -243,30 +293,6 @@ if ($attendanceResult) {
         $attendanceList[] = $row;
     }
 }
-
-/*
-|--------------------------------------------------------------------------
-| TODAY'S ATTENDANCE COUNTS ONLY
-|--------------------------------------------------------------------------
-*/
-
-$present = count(array_filter(
-    $attendanceList,
-    fn($a) =>
-        strtolower(trim($a['status'] ?? '')) === 'present'
-));
-
-$absent = count(array_filter(
-    $attendanceList,
-    fn($a) =>
-        strtolower(trim($a['status'] ?? '')) === 'absent'
-));
-
-$late = count(array_filter(
-    $attendanceList,
-    fn($a) =>
-        strtolower(trim($a['status'] ?? '')) === 'late'
-));
 ?>
 ?>
 <!DOCTYPE html>
