@@ -1,5 +1,7 @@
 <?php
 session_start();
+header('Content-Type: application/json');
+ini_set('display_errors', 1);
 include __DIR__ . "/backend/db.php";
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -24,7 +26,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$result) {
         echo json_encode([
             "success" => false,
-            "message" => "Database query failed."
+            "message" => "Database query failed.",
+            "error" => pg_last_error($conn)
         ]);
         exit;
     }

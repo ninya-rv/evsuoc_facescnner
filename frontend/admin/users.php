@@ -281,7 +281,7 @@ $inactiveUsers = $inactiveRow['inactive'];
                     <tr data-id="<?php echo $row['id']; ?>">
 
                         <td>
-                            <?php echo htmlspecialchars($row['name']); ?>
+                            <?php echo htmlspecialchars($row['first_name'] . ' ' . $row['last_name']); ?>
                         </td>
 
                         <td>

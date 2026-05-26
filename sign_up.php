@@ -69,8 +69,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    $check = "SELECT * FROM users WHERE email='$email'";
-    $result = pg_query($conn, $check);
+    // CHECK EXISTING EMAIL (SAFE)
+    $check = "SELECT * FROM users WHERE email = $1";
+    $result = pg_query_params($conn, $check, [$email]);
 
     if (!$result) {
         echo json_encode([
@@ -81,51 +82,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (pg_num_rows($result) > 0) {
-
         echo json_encode([
             "success" => false,
             "message" => "Email already exists."
         ]);
-
         exit;
     }
 
     $sql = "
-        INSERT INTO users (
-            first_name,
-            last_name,
-            name,
-            email,
-            password,
-            role,
-            status
-        )
-        VALUES (
-            '" . pg_escape_string($conn, $first_name) . "',
-            '" . pg_escape_string($conn, $last_name) . "',
-            '" . pg_escape_string($conn, $name) . "',
-            '" . pg_escape_string($conn, $email) . "',
-            '" . $password . "',
-            '" . pg_escape_string($conn, $role) . "',
-            'inactive'
-        )
+    INSERT INTO users (
+        first_name,
+        last_name,
+        name,
+        email,
+        password,
+        role,
+        status
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7)
     ";
 
-    if (pg_query($conn, $sql)) {
+    $insert = pg_query_params($conn, $sql, [
+        $first_name,
+        $last_name,
+        $name,
+        $email,
+        $password,
+        $role,
+        'inactive'
+    ]);
 
+    if ($insert) {
         echo json_encode([
             "success" => true,
             "message" => "Account created. Waiting for admin approval."
         ]);
-
     } else {
-
         echo json_encode([
             "success" => false,
             "message" => pg_last_error($conn)
         ]);
     }
-
     exit;
 }
 ?>
