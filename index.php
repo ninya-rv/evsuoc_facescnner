@@ -33,35 +33,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $user = pg_fetch_assoc($result);
 
-        if ($user['password'] === $password) {
+        if (password_verify($password, $user['password'])) {
 
-            if ($user['status'] !== "active") {
-                echo json_encode([
-                    "success" => false,
-                    "message" => "Account is inactive."
-                ]);
-                exit;
-            }
-
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['name'] = $user['name'];
-            $_SESSION['email'] = $user['email'];
-            $_SESSION['role'] = $user['role'];
-
-            echo json_encode([
-                "success" => true,
-                "role" => $user['role']
-            ]);
-            exit;
-
-        } else {
+        if ($user['status'] !== "active") {
 
             echo json_encode([
                 "success" => false,
-                "message" => "Wrong password."
+                "message" => "Account is inactive."
             ]);
+
             exit;
         }
+
+        $_SESSION['user_id'] = $user['id'];
+
+        $_SESSION['name'] =
+            $user['first_name'] . ' ' . $user['last_name'];
+
+        $_SESSION['email'] = $user['email'];
+
+        $_SESSION['role'] = $user['role'];
+
+        echo json_encode([
+            "success" => true,
+            "role" => $user['role']
+        ]);
+
+        exit;
+
+    } else {
+
+        echo json_encode([
+            "success" => false,
+            "message" => "Wrong password."
+        ]);
+
+        exit;
+    }
 
     } else {
 

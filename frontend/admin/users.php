@@ -269,7 +269,7 @@ $inactiveUsers = $inactiveRow['inactive'];
                     SELECT *
                     FROM users
                     WHERE role != 'admin'
-                    ORDER BY name ASC
+                    ORDER BY first_name ASC
                 ";
 
                 $result = pg_query($conn, $sql);
