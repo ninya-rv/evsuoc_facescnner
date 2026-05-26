@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $last_name = pg_escape_string($conn, $last_name);
     $name = pg_escape_string($conn, $name);
     $email = pg_escape_string($conn, $email);
-    $password = pg_escape_string($conn, $password);
+    $password = password_hash($password, PASSWORD_DEFAULT);
     $role = pg_escape_string($conn, $role);
 
     if ($role === 'admin') {
@@ -90,8 +90,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    $sql = "INSERT INTO users (first_name, last_name, name, email, password, role, status)
-            VALUES ('$first_name', '$last_name', '$name', '$email', '$password', '$role', 'inactive')";
+    $sql = "
+        INSERT INTO users (
+            first_name,
+            last_name,
+            name,
+            email,
+            password,
+            role,
+            status
+        )
+        VALUES (
+            '" . pg_escape_string($conn, $first_name) . "',
+            '" . pg_escape_string($conn, $last_name) . "',
+            '" . pg_escape_string($conn, $name) . "',
+            '" . pg_escape_string($conn, $email) . "',
+            '" . $password . "',
+            '" . pg_escape_string($conn, $role) . "',
+            'inactive'
+        )
+    ";
 
     if (pg_query($conn, $sql)) {
 
