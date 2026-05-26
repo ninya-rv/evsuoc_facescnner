@@ -17,18 +17,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    $name = trim($data['name'] ?? '');
+    $first_name = trim($data['first_name'] ?? '');
+    $last_name = trim($data['last_name'] ?? '');
     $email = trim($data['email'] ?? '');
     $password = $data['password'] ?? '';
     $role = isset($data['role']) ? trim($data['role']) : 'instructor';
 
-    if (!$name || !$email || !$password) {
+    if (!$first_name || !$last_name || !$email || !$password) {
         echo json_encode([
             "success" => false,
             "message" => "Please fill all fields."
         ]);
         exit;
     }
+
+    $name = trim("$first_name $last_name");
 
     if (!preg_match('/^[^@\s]+@evsu\.edu\.ph$/i', $email)) {
         echo json_encode([
@@ -49,6 +52,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
+    $first_name = pg_escape_string($conn, $first_name);
+    $last_name = pg_escape_string($conn, $last_name);
     $name = pg_escape_string($conn, $name);
     $email = pg_escape_string($conn, $email);
     $password = pg_escape_string($conn, $password);
@@ -85,8 +90,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    $sql = "INSERT INTO users (name, email, password, role, status)
-            VALUES ('$name', '$email', '$password', '$role', 'inactive')";
+    $sql = "INSERT INTO users (first_name, last_name, name, email, password, role, status)
+            VALUES ('$first_name', '$last_name', '$name', '$email', '$password', '$role', 'inactive')";
 
     if (pg_query($conn, $sql)) {
 
@@ -346,7 +351,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <form id="signUpForm">
 
                 <div class="field">
-                    <input id="name" type="text" placeholder="Full Name" required />
+                    <input id="firstName" type="text" placeholder="First Name" required />
+                </div>
+
+                <div class="field">
+                    <input id="lastName" type="text" placeholder="Last Name" required />
                 </div>
 
                 <div class="field">
@@ -397,7 +406,8 @@ form.addEventListener('submit', async (e) => {
 
     msg.classList.remove('show','error','success');
 
-    const name = document.getElementById('name').value.trim();
+    const firstName = document.getElementById('firstName').value.trim();
+    const lastName = document.getElementById('lastName').value.trim();
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
@@ -405,7 +415,7 @@ form.addEventListener('submit', async (e) => {
     const emailValid = /^[^@\s]+@evsu\.edu\.ph$/i;
     const passwordValid = /^(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,}$/;
 
-    if(!name || !email || !password || !confirmPassword){
+    if(!firstName || !lastName || !email || !password || !confirmPassword){
 
         msg.classList.add('show','error');
         msg.textContent = "Please fill all fields.";
@@ -442,7 +452,8 @@ form.addEventListener('submit', async (e) => {
             },
 
             body:JSON.stringify({
-                name,
+                first_name: firstName,
+                last_name: lastName,
                 email,
                 password,
                 role:'instructor'
