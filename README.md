@@ -15,14 +15,14 @@ Make sure the following are installed on your system:
 - Railway
 
 ## Technologies Used
-PHP
-HTML
-CSS
-JavaScript
-Supabase
-Brevo (Email Services)
-Railway (Deployment)
-GitHub & GitHub Desktop
+- PHP
+- HTML
+- CSS
+- JavaScript
+- Supabase
+- Brevo (Email Services)
+- Railway (Deployment)
+- GitHub & GitHub Desktop
 
 ## Check your PHP version:
 
@@ -44,6 +44,7 @@ BREVO_API_KEY=your_brevo_api_key
 
 ## Railway Deployment
 Live Deployment:
+
 https://evsuoccfacescanner-production.up.railway.app
 
 ## System Access
@@ -54,4 +55,5 @@ https://evsuoccfacescanner-production.up.railway.app/frontend/student/FaceScan.h
 Administrators and instructors use this page to log in and manage attendance records:
 
 https://evsuoccfacescanner-production.up.railway.app/index.php
+
 Login using the administrator or instructor credentials created during setup.
