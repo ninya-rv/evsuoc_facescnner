@@ -222,14 +222,14 @@ if ($assignmentResult) {
     }
 }
 
-
 $attendanceQuery = "
-    SELECT *
+    SELECT DISTINCT ON (student_id)
+        *
     FROM attendance
     WHERE LOWER(TRIM(instructor_name))
         = LOWER(TRIM('$instructor_name'))
     AND date = '$currentDate'
-    ORDER BY time_in DESC
+    ORDER BY student_id, time_in DESC
 ";
 
 $attendanceResult = pg_query($conn, $attendanceQuery);
@@ -239,11 +239,16 @@ $attendanceList = [];
 if ($attendanceResult) {
 
     while ($row = pg_fetch_assoc($attendanceResult)) {
+
         $attendanceList[] = $row;
     }
 }
 
-
+/*
+|--------------------------------------------------------------------------
+| TODAY'S ATTENDANCE COUNTS ONLY
+|--------------------------------------------------------------------------
+*/
 
 $present = count(array_filter(
     $attendanceList,
@@ -262,6 +267,7 @@ $late = count(array_filter(
     fn($a) =>
         strtolower(trim($a['status'] ?? '')) === 'late'
 ));
+?>
 ?>
 <!DOCTYPE html>
 <html lang="en">
