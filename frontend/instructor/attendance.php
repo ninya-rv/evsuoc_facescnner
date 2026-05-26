@@ -228,7 +228,8 @@ $attendanceQuery = "
     FROM attendance
     WHERE LOWER(TRIM(instructor_name))
         = LOWER(TRIM('$instructor_name'))
-    ORDER BY date DESC, time_in DESC
+    AND date = '$currentDate'
+    ORDER BY time_in DESC
 ";
 
 $attendanceResult = pg_query($conn, $attendanceQuery);
@@ -242,20 +243,28 @@ if ($attendanceResult) {
     }
 }
 
+/*
+|--------------------------------------------------------------------------
+| TODAY COUNTS ONLY
+|--------------------------------------------------------------------------
+*/
 
 $present = count(array_filter(
     $attendanceList,
-    fn($a) => strtolower(trim($a['status'])) == 'present'
+    fn($a) =>
+        strtolower(trim($a['status'] ?? '')) === 'present'
 ));
 
 $absent = count(array_filter(
     $attendanceList,
-    fn($a) => strtolower(trim($a['status'])) == 'absent'
+    fn($a) =>
+        strtolower(trim($a['status'] ?? '')) === 'absent'
 ));
 
 $late = count(array_filter(
     $attendanceList,
-    fn($a) => strtolower(trim($a['status'])) == 'late'
+    fn($a) =>
+        strtolower(trim($a['status'] ?? '')) === 'late'
 ));
 ?>
 <!DOCTYPE html>
