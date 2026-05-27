@@ -7,7 +7,10 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     exit;
 }
 
-$adminName = trim($_SESSION['name'] ?? '');
+$adminName = trim(
+    ($_SESSION['first_name'] ?? '') . ' ' .
+    ($_SESSION['last_name'] ?? '')
+);
 $adminInitials = 'SA';
 
 if ($adminName !== '') {
@@ -193,12 +196,12 @@ $adminEmail = $_SESSION['email'] ?? 'admin@evsu.edu.ph';
                         <option value="">Select Instructor</option>
 
                         <?php
-                        $instructorQuery = "SELECT name FROM users WHERE role = 'instructor' AND status = 'active' ORDER BY name ASC";
+                        $instructorQuery = "SELECT first_name, last_name FROM users WHERE role = 'instructor' AND status = 'active' ORDER BY first_name ASC";
 
                         $instructorResult = pg_query($conn, $instructorQuery);
 
                         while ($instructor = pg_fetch_assoc($instructorResult)) {
-                            echo '<option value="'.$instructor['name'].'">'.$instructor['name'].'</option>';
+                            echo '<option value="'.$instructor['first_name'].' '.$instructor['last_name'].'">'.$instructor['first_name'].' '.$instructor['last_name'].'</option>';
                         }
                         ?>
                     </select>

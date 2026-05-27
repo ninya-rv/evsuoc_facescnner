@@ -8,58 +8,84 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = json_decode(file_get_contents("php://input"), true);
 
     if (!$data) {
-
         echo json_encode([
             "success" => false,
             "message" => "Invalid request."
         ]);
-
         exit;
     }
 
-    $name = mysqli_real_escape_string($conn, $data['name']);
-    $email = mysqli_real_escape_string($conn, $data['email']);
-    $password = mysqli_real_escape_string($conn, $data['password']);
+    $first_name = pg_escape_string($conn, trim($data['first_name']));
+    $last_name  = pg_escape_string($conn, trim($data['last_name']));
+    $email      = pg_escape_string($conn, trim($data['email']));
+    $password   = $data['password'];
 
-    $role = isset($data['role'])
-        ? mysqli_real_escape_string($conn, $data['role'])
-        : 'instructor';
+    $role = 'instructor';
 
-    if ($role === 'admin') {
-
+    // =========================
+    // EMAIL VALIDATION (EVSU ONLY)
+    // =========================
+    if (!preg_match("/^[a-zA-Z0-9._%+-]+@evsu\.edu\.ph$/", $email)) {
         echo json_encode([
             "success" => false,
-            "message" => "Admin account cannot be created here."
+            "message" => "Only @evsu.edu.ph emails are allowed."
         ]);
-
         exit;
     }
 
-    $check = "SELECT * FROM users WHERE email='$email'";
-    $result = mysqli_query($conn, $check);
+    // =========================
+    // PASSWORD VALIDATION
+    // =========================
+    if (
+        strlen($password) < 8 ||
+        !preg_match('/[A-Z]/', $password) ||
+        !preg_match('/[\W_]/', $password)
+    ) {
+        echo json_encode([
+            "success" => false,
+            "message" => "Password must be 8+ chars, 1 uppercase, 1 symbol."
+        ]);
+        exit;
+    }
 
-    if (mysqli_num_rows($result) > 0) {
+    // =========================
+    // CHECK EMAIL EXISTS
+    // =========================
+    $check = "SELECT id FROM users WHERE email='$email' LIMIT 1";
+    $result = pg_query($conn, $check);
 
+    if (!$result) {
+        echo json_encode([
+            "success" => false,
+            "message" => "Database error."
+        ]);
+        exit;
+    }
+
+    if (pg_num_rows($result) > 0) {
         echo json_encode([
             "success" => false,
             "message" => "Email already exists."
         ]);
-
         exit;
     }
 
-    $sql = "INSERT INTO users (name, email, password, role, status)
-            VALUES ('$name', '$email', '$password', '$role', 'inactive')";
+    // =========================
+    // INSERT USER (SUPABASE)
+    // =========================
+    $sql = "
+        INSERT INTO users (first_name, last_name, email, password, role, status)
+        VALUES ('$first_name', '$last_name', '$email', '$password', '$role', 'active')
+    ";
 
-    if (mysqli_query($conn, $sql)) {
+    $insert = pg_query($conn, $sql);
 
+    if ($insert) {
         echo json_encode([
             "success" => true,
             "message" => "Account created. Waiting for admin approval."
         ]);
-
     } else {
-
         echo json_encode([
             "success" => false,
             "message" => "Registration failed."
@@ -309,11 +335,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <form id="signUpForm">
 
                 <div class="field">
-                    <input id="name" type="text" placeholder="Full Name" required />
+                    <input id="first_name" type="text" placeholder="First Name" required />
                 </div>
 
                 <div class="field">
-                    <input id="email" type="email" placeholder="email@example.com" required />
+                    <input id="last_name" type="text" placeholder="Last Name" required />
+                </div>
+
+                <div class="field">
+                    <input id="email" type="email" placeholder="@evsu.edu.ph" required />
                 </div>
 
                 <div class="field">
@@ -360,12 +390,13 @@ form.addEventListener('submit', async (e) => {
 
     msg.classList.remove('show','error','success');
 
-    const name = document.getElementById('name').value.trim();
+    const firstName = document.getElementById('first_name').value.trim();
+    const lastName = document.getElementById('last_name').value.trim();
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
 
-    if(!name || !email || !password || !confirmPassword){
+    if(!firstName || !lastName || !email || !password || !confirmPassword){
 
         msg.classList.add('show','error');
         msg.textContent = "Please fill all fields.";
@@ -390,10 +421,11 @@ form.addEventListener('submit', async (e) => {
             },
 
             body:JSON.stringify({
-                name,
-                email,
-                password,
-                role:'instructor'
+                first_name: firstName,
+                last_name: lastName,
+                email: email,
+                password: password,
+                role: 'instructor'
             })
         });
 

@@ -4,9 +4,11 @@ include __DIR__ . "/backend/db.php";
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
+    header('Content-Type: application/json; charset=utf-8');
+
     $data = json_decode(file_get_contents("php://input"), true);
 
-    if (!isset($data['email']) || !isset($data['password'])) {
+    if (!$data || !isset($data['email']) || !isset($data['password'])) {
         echo json_encode([
             "success" => false,
             "message" => "Invalid request."
@@ -14,66 +16,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    $email = pg_escape_string($conn, $data['email']);
+    $email = trim($data['email']);
     $password = $data['password'];
 
-    $sql = "SELECT * FROM users WHERE email='$email' LIMIT 1";
+    // PostgreSQL safe escape
+    $email = pg_escape_string($conn, $email);
 
+    $sql = "SELECT * FROM users WHERE email='$email' LIMIT 1";
     $result = pg_query($conn, $sql);
 
     if (!$result) {
         echo json_encode([
             "success" => false,
-            "message" => "Database query failed."
+            "message" => "Database error."
         ]);
         exit;
     }
 
-    if (pg_num_rows($result) === 1) {
+    $user = pg_fetch_assoc($result);
 
-        $user = pg_fetch_assoc($result);
-
-        if ($user['password'] === $password) {
-
-            if ($user['status'] !== "active") {
-                echo json_encode([
-                    "success" => false,
-                    "message" => "Account is inactive."
-                ]);
-                exit;
-            }
-
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['name'] = $user['first_name'] . ' ' . $user['last_name'];
-            $_SESSION['email'] = $user['email'];
-            $_SESSION['role'] = $user['role'];
-
-            echo json_encode([
-                "success" => true,
-                "role" => $user['role']
-            ]);
-            exit;
-
-        } else {
-
-            echo json_encode([
-                "success" => false,
-                "message" => "Wrong password."
-            ]);
-            exit;
-        }
-
-    } else {
-
+    if (!$user) {
         echo json_encode([
             "success" => false,
             "message" => "Email not found."
         ]);
         exit;
     }
+
+    if ($user['password'] !== $password) {
+        echo json_encode([
+            "success" => false,
+            "message" => "Wrong password."
+        ]);
+        exit;
+    }
+
+    if ($user['status'] !== "active") {
+        echo json_encode([
+            "success" => false,
+            "message" => "Account is inactive."
+        ]);
+        exit;
+    }
+
+    $_SESSION['user_id'] = $user['id'];
+    $_SESSION['first_name'] = $user['first_name'];
+    $_SESSION['last_name'] = $user['last_name'];
+    $_SESSION['email'] = $user['email'];
+    $_SESSION['role'] = $user['role'];
+
+    echo json_encode([
+        "success" => true,
+        "role" => $user['role']
+    ]);
+    exit; // ✅ IMPORTANT: stops HTML output
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>

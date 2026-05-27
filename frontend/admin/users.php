@@ -205,11 +205,19 @@ $inactiveUsers = $inactiveRow['inactive'];
 
                     <input
                         type="text"
-                        name="name"
-                        id="name"
-                        placeholder="Full Name"
+                        name="first_name"
+                        id="first_name"
+                        placeholder="First Name"
                         required
-                    >
+                    />
+
+                    <input
+                        type="text"
+                        name="last_name"
+                        id="last_name"
+                        placeholder="Last Name"
+                        required
+                    />
 
                     <input
                         type="email"
@@ -217,7 +225,7 @@ $inactiveUsers = $inactiveRow['inactive'];
                         id="email"
                         placeholder="Email"
                         required
-                    >
+                    />
 
                     <input
                         type="password"
@@ -225,7 +233,7 @@ $inactiveUsers = $inactiveRow['inactive'];
                         id="password"
                         placeholder="Password"
                         required
-                    >
+                    />
 
                     <button
                         type="submit"
@@ -244,7 +252,8 @@ $inactiveUsers = $inactiveRow['inactive'];
                 <thead>
 
                     <tr>
-                        <th>Name</th>
+                        <th>First Name</th>
+                        <th>Last Name</th>
                         <th>Email</th>
                         <th>Password</th>
                         <th>Status</th>
@@ -261,7 +270,7 @@ $inactiveUsers = $inactiveRow['inactive'];
                     SELECT *
                     FROM users
                     WHERE role != 'admin'
-                    ORDER BY name ASC
+                    ORDER BY first_name ASC
                 ";
 
                 $result = pg_query($conn, $sql);
@@ -273,7 +282,11 @@ $inactiveUsers = $inactiveRow['inactive'];
                     <tr data-id="<?php echo $row['id']; ?>">
 
                         <td>
-                            <?php echo htmlspecialchars($row['name']); ?>
+                            <?php echo htmlspecialchars($row['first_name']); ?>
+                        </td>
+
+                        <td>
+                            <?php echo htmlspecialchars($row['last_name']); ?>
                         </td>
 
                         <td>
@@ -354,12 +367,15 @@ searchInput.addEventListener("input", function() {
 
     rows.forEach(row => {
 
-        const name = row.cells[0].textContent.toLowerCase();
+        const firstName = row.cells[0].textContent.toLowerCase();
 
-        const email = row.cells[1].textContent.toLowerCase();
+        const lastName = row.cells[1].textContent.toLowerCase();
+
+        const email = row.cells[2].textContent.toLowerCase();
 
         if (
-            name.includes(value) ||
+            firstName.includes(value) ||
+            lastName.includes(value) ||
             email.includes(value)
         ) {
             row.style.display = "";
