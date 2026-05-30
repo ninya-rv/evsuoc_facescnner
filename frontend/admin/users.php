@@ -146,7 +146,7 @@ $inactiveUsers = $inactiveRow['inactive'];
             <li>
                 <a href="users.php">
                     <i class="fa-solid fa-users"></i>
-                    <span>Users</span>
+                    <span>Instructors</span>
                 </a>
             </li>
 
@@ -163,12 +163,12 @@ $inactiveUsers = $inactiveRow['inactive'];
 
     <div class="main">
 
-        <h3>Users</h3>
+        <h3>Instructors</h3>
 
         <div class="cards">
 
             <div class="card">
-                <h4>Total Users</h4>
+                <h4>Total Instructors</h4>
                 <p><?php echo $totalUsers; ?></p>
             </div>
 
@@ -194,64 +194,72 @@ $inactiveUsers = $inactiveRow['inactive'];
 
         <div class="student-section">
 
-            <form
-                action="../../backend/add_user.php"
-                method="POST"
-                class="assignment-form"
-                id="addUserForm"
-            >
+       <form
+    action="../../backend/add_user.php"
+    method="POST"
+    enctype="multipart/form-data"
+    class="assignment-form"
+    id="addUserForm"
+>
 
-                <div class="form-row">
+    <div class="form-row">
 
-                    <input
-                        type="text"
-                        name="first_name"
-                        id="first_name"
-                        placeholder="First Name"
-                        required
-                    />
+        <input
+            type="text"
+            name="first_name"
+            id="first_name"
+            placeholder="First Name"
+            required
+        />
 
-                    <input
-                        type="text"
-                        name="last_name"
-                        id="last_name"
-                        placeholder="Last Name"
-                        required
-                    />
+        <input
+            type="text"
+            name="last_name"
+            id="last_name"
+            placeholder="Last Name"
+            required
+        />
 
-                    <input
-                        type="email"
-                        name="email"
-                        id="email"
-                        placeholder="Email"
-                        required
-                    />
+        <input
+            type="email"
+            name="email"
+            id="email"
+            placeholder="Email"
+            required
+        />
 
-                    <input
-                        type="password"
-                        name="password"
-                        id="password"
-                        placeholder="Password"
-                        required
-                    />
+        <input
+            type="password"
+            name="password"
+            id="password"
+            placeholder="Password"
+            required
+        />
 
-                    <button
-                        type="submit"
-                        name="add_user"
-                        class="assign-btn"
-                    >
-                        Add User
-                    </button>
+        <input
+            type="file"
+            name="photo"
+            accept=".jpg,.jpeg,.png"
+        />
 
-                </div>
+        <button
+            type="submit"
+            name="add_user"
+            class="assign-btn"
+        >
+            Add User
+        </button>
 
-            </form>
+    </div>
+
+</form>
 
             <table class="student-table">
 
                 <thead>
 
                     <tr>
+                        <th>Photo</th>
                         <th>First Name</th>
                         <th>Last Name</th>
                         <th>Email</th>
@@ -280,6 +288,19 @@ $inactiveUsers = $inactiveRow['inactive'];
                 ?>
 
                     <tr data-id="<?php echo $row['id']; ?>">
+                        <td>
+                            <?php if (!empty($row['photo'])): ?>
+                                <img 
+                                    src="<?php echo htmlspecialchars($row['photo']); ?>" 
+                                    alt="User Photo"
+                                    style="width:50px; height:50px; border-radius:50%; object-fit:cover;"
+                                >
+                            <?php else: ?>
+                                <span>
+                                    <?php echo htmlspecialchars(substr($row['first_name'], 0, 1) . substr($row['last_name'], 0, 1)); ?>
+                                </span>
+                            <?php endif; ?>
+                        </td>
 
                         <td>
                             <?php echo htmlspecialchars($row['first_name']); ?>

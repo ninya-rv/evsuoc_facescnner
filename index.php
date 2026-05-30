@@ -19,7 +19,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($data['email']);
     $password = $data['password'];
 
-    // PostgreSQL safe escape
     $email = pg_escape_string($conn, $email);
 
     $sql = "SELECT * FROM users WHERE email='$email' LIMIT 1";
@@ -36,13 +35,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $user = pg_fetch_assoc($result);
 
     if (!$user) {
+
+        $studentSql = "
+            SELECT *
+            FROM students
+            WHERE LOWER(TRIM(email)) = LOWER(TRIM('$email'))
+            AND LOWER(TRIM(status)) = 'active'
+            LIMIT 1
+        ";
+
+        $studentResult = pg_query($conn, $studentSql);
+
+        if ($studentResult && pg_num_rows($studentResult) > 0) {
+
+            $student = pg_fetch_assoc($studentResult);
+
+            if ($student['password'] !== $password) {
+
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Wrong password."
+                ]);
+                exit;
+            }
+
+            $_SESSION['user_id'] = $student['student_id'];
+            $_SESSION['student_id'] = $student['student_id'];
+            $_SESSION['first_name'] = $student['first_name'];
+            $_SESSION['last_name'] = $student['last_name'];
+            $_SESSION['email'] = $student['email'];
+            $_SESSION['year'] = $student['year'];
+            $_SESSION['section'] = $student['section'];
+            $_SESSION['role'] = 'student';
+
+            echo json_encode([
+                "success" => true,
+                "role" => "student"
+            ]);
+            exit;
+        }
+
         echo json_encode([
             "success" => false,
             "message" => "Email not found."
         ]);
         exit;
     }
-
     if ($user['password'] !== $password) {
         echo json_encode([
             "success" => false,
@@ -353,7 +391,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
 </div>
-
 <script>
 const form = document.getElementById('signInForm');
 const msg = document.getElementById('message');
@@ -404,17 +441,23 @@ form.addEventListener('submit', async (e) => {
 
                     window.location.href = '/frontend/admin/dashboard.php';
 
-                } else if (data.role === 'instructor') {
+                } 
+                else if (data.role === 'instructor') {
 
                     window.location.href = '/frontend/instructor/dashboard.php';
 
-                } else {
+                } 
+                else if (data.role === 'student') {
 
-                    window.location.href = '/frontend/user/dashboard.php';
+                    window.location.href = '/frontend/student/dashboard.php';
+
+                } 
+                else {
+
+                    window.location.href = '/index.php';
                 }
 
             }, 700);
-
         } else {
 
             msg.classList.add('show', 'error');

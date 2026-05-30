@@ -123,7 +123,7 @@ $late = count(array_filter(
             <li>
                 <a href="users.php">
                     <i class="fa-solid fa-users"></i>
-                    <span>Users</span>
+                    <span>Instructors</span>
                 </a>
             </li>
 

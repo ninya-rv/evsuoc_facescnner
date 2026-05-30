@@ -11,7 +11,7 @@ if (!$conn) {
 }
 
 $query = "
-    SELECT student_id, name, email, face_descriptor, status
+    SELECT student_id, first_name, last_name, email, face_descriptor, status
     FROM students
 ";
 
@@ -40,7 +40,8 @@ while ($row = pg_fetch_assoc($result)) {
 
     $students[] = [
         "student_id" => $row["student_id"],
-        "name" => $row["name"],
+        "first_name" => $row["first_name"],
+        "last_name" => $row["last_name"],
         "email" => $row["email"],
         "face_descriptor" => array_values($descriptor),
         "status" => $row["status"]

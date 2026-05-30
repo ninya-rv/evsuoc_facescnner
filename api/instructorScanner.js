@@ -16,7 +16,86 @@ document.addEventListener("DOMContentLoaded", () => {
     let scannerInitialized = false;
     let recentScans = {};
 
-    if (classSelect) classSelect.disabled = true;
+    if (classSelect) {
+        classSelect.disabled = false;
+    }
+
+    function checkAndAutoSelectTimeIn() {
+
+        if (!classSelect) return;
+
+        const now = getPHTime();
+
+        let matchedOption = null;
+        let detectedMode = null;
+
+        const options = Array.from(classSelect.options);
+
+        options.forEach(option => {
+
+            if (!option.value) return;
+            if (option.disabled) return;
+
+            const today = [
+                now.getFullYear(),
+                String(now.getMonth() + 1).padStart(2, "0"),
+                String(now.getDate()).padStart(2, "0")
+            ].join("-");
+
+            const startTime = new Date(`${today}T${option.dataset.start}`);
+            const endTime = new Date(`${today}T${option.dataset.end}`);
+
+            // 30 minutes before class end
+            const timeoutTrigger = new Date(
+                endTime.getTime() - (30 * 60 * 1000)
+            );
+
+            const nowTime = now.getTime();
+            const start = startTime.getTime();
+            const end = endTime.getTime();
+            const timeout = timeoutTrigger.getTime();
+
+            if (nowTime >= start && nowTime < timeout) {
+
+                matchedOption = option;
+                detectedMode = "time_in";
+            }
+
+            else if (nowTime >= timeout && nowTime <= end) {
+
+                matchedOption = option;
+                detectedMode = "time_out";
+            }
+        });
+
+        if (matchedOption && detectedMode) {
+
+            classSelect.disabled = false;
+
+            classSelect.value = matchedOption.value;
+
+            selectedClass = {
+                assignment_id: matchedOption.value,
+                year_level: matchedOption.dataset.year,
+                section: matchedOption.dataset.section,
+                subject: matchedOption.dataset.subject,
+                day: matchedOption.dataset.day,
+                start_time: matchedOption.dataset.start,
+                end_time: matchedOption.dataset.end,
+                mode: detectedMode
+            };
+
+            scanMode = detectedMode;
+
+            setModeButtons(scanMode);
+
+            prepareScanner();
+
+            setStatus(
+                `Scanner ready (${scanMode.replace("_", " ")}) - ${selectedClass.subject}`
+            );
+        }
+    }
     function setStatus(message) {
         if (!statusDiv) return;
         statusDiv.innerText = message;
@@ -51,19 +130,34 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     timeInBtn?.addEventListener("click", () => {
+
         scanMode = "time_in";
+
         setModeButtons(scanMode);
+
         setStatus("Mode: Time In selected");
+
         classSelect.disabled = false;
+
+        if (classSelect.value) {
+            classSelect.dispatchEvent(new Event("change"));
+        }
     });
 
     timeOutBtn?.addEventListener("click", () => {
-        scanMode = "time_out";
-        setModeButtons(scanMode);
-        setStatus("Mode: Time Out selected");
-        classSelect.disabled = false;
-    });
 
+        scanMode = "time_out";
+
+        setModeButtons(scanMode);
+
+        setStatus("Mode: Time Out selected");
+
+        classSelect.disabled = false;
+
+        if (classSelect.value) {
+            classSelect.dispatchEvent(new Event("change"));
+        }
+    });
     function getPHTime() {
         const now = new Date();
         return new Date(now.toLocaleString("en-US", { timeZone: "Asia/Manila" }));
@@ -140,7 +234,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!descriptor) return null;
 
             return new faceapi.LabeledFaceDescriptors(
-                `${s.name} ${s.student_id}`,
+                `${s.first_name} ${s.last_name} ${s.student_id}`,
                 [descriptor]
             );
         }).filter(Boolean);
@@ -161,7 +255,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const students = response.students || [];
 
         return students.find(
-            s => `${s.name} ${s.student_id}` === label
+            s => `${s.first_name} ${s.last_name} ${s.student_id}` === label
         );
     }
 
@@ -173,7 +267,8 @@ document.addEventListener("DOMContentLoaded", () => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 student_id: student.student_id,
-                name: student.name,
+                first_name: student.first_name,
+                last_name: student.last_name,
                 email: student.email,
                 subject: selectedClass.subject,
                 year_level: selectedClass.year_level,
@@ -260,4 +355,7 @@ document.addEventListener("DOMContentLoaded", () => {
             dropdown.style.display = "none";
         }
     });
+
+    // Auto-select Time In if there's an active schedule
+    checkAndAutoSelectTimeIn();
 });

@@ -21,7 +21,7 @@ $currentDate = $manilaNow->format('Y-m-d');
 $currentDay = $manilaNow->format('l');
 
 $instructorQuery = "
-    SELECT name, email
+    SELECT first_name, last_name, email
     FROM users
     WHERE id = '$instructor_id'
     AND role = 'instructor'
@@ -34,7 +34,7 @@ if ($instructorResult && pg_num_rows($instructorResult) > 0) {
 
     $instructorData = pg_fetch_assoc($instructorResult);
 
-    $instructorName = $instructorData['name'];
+    $instructorName = $instructorData['first_name'] . ' ' . $instructorData['last_name'];
     $instructorEmail = $instructorData['email'];
 
     $nameParts = explode(" ", trim($instructorName));

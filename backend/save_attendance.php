@@ -17,7 +17,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'instructor') {
 $instructor_id = $_SESSION['user_id'];
 
 $instructorQuery = "
-    SELECT name 
+    SELECT first_name, last_name
     FROM users 
     WHERE id='$instructor_id' 
     AND role='instructor' 
@@ -37,7 +37,8 @@ if (!$instructorResult || pg_num_rows($instructorResult) == 0) {
     exit;
 }
 
-$instructor_name = pg_fetch_assoc($instructorResult)['name'];
+$instructorData = pg_fetch_assoc($instructorResult);
+$instructor_name = $instructorData['first_name'] . ' ' . $instructorData['last_name'];
 
 $data = json_decode(file_get_contents("php://input"), true);
 
@@ -53,7 +54,8 @@ if (!$data) {
 }
 
 $student_id = pg_escape_string($conn, $data['student_id'] ?? '');
-$name = pg_escape_string($conn, $data['name'] ?? '');
+$first_name = pg_escape_string($conn, $data['first_name'] ?? '');
+$last_name = pg_escape_string($conn, $data['last_name'] ?? '');
 $email = pg_escape_string($conn, $data['email'] ?? '');
 $subject = pg_escape_string($conn, $data['subject'] ?? '');
 $year_level = pg_escape_string($conn, $data['year_level'] ?? '');
@@ -65,6 +67,8 @@ $mode = $data['mode'] ?? 'time_in';
 
 $date = date("Y-m-d");
 $currentTime = date("H:i:s");
+
+$name = $first_name . ' ' . $last_name;
 
 if (!$student_id || !$name || !$subject) {
 

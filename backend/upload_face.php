@@ -1,5 +1,8 @@
 <?php
 
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 header("Content-Type: application/json");
 
 include "db.php";
@@ -16,16 +19,43 @@ if (!$data) {
     exit;
 }
 
-$student_id = pg_escape_string($conn, $data['student_id']);
-$name = pg_escape_string($conn, $data['name']);
-$email = pg_escape_string($conn, $data['email']);
-$year = pg_escape_string($conn, $data['year']);
-$section = pg_escape_string($conn, $data['section']);
+$student_id = pg_escape_string($conn, trim($data['student_id']));
+$first_name = pg_escape_string($conn, trim($data['first_name']));
+$last_name = pg_escape_string($conn, trim($data['last_name']));
+$email = pg_escape_string($conn, trim($data['email']));
+$password = pg_escape_string($conn, trim($data['password']));
+$year = pg_escape_string($conn, trim($data['year']));
+$section = pg_escape_string($conn, trim($data['section']));
 
 $new_descriptor = $data['descriptor'];
 
 $status = "inactive";
 
+if (!preg_match('/^[a-zA-Z0-9._%+-]+@evsu\.edu\.ph$/', $email)) {
+
+    echo json_encode([
+        "success" => false,
+        "msg" => "Only @evsu.edu.ph emails are allowed."
+    ]);
+
+    exit;
+}
+
+if (
+    strlen($password) < 8 ||
+    !preg_match('/[A-Z]/', $password) ||
+    !preg_match('/[\W_]/', $password)
+) {
+
+    echo json_encode([
+        "success" => false,
+        "msg" => "Weak password."
+    ]);
+
+    exit;
+}
+
+$hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
 $checkQuery = "
     SELECT id
@@ -34,6 +64,16 @@ $checkQuery = "
 ";
 
 $checkResult = pg_query($conn, $checkQuery);
+
+if (!$checkResult) {
+
+    echo json_encode([
+        "success" => false,
+        "msg" => pg_last_error($conn)
+    ]);
+
+    exit;
+}
 
 if (pg_num_rows($checkResult) > 0) {
 
@@ -44,7 +84,6 @@ if (pg_num_rows($checkResult) > 0) {
 
     exit;
 }
-
 
 function faceDistance($a, $b) {
 
@@ -58,11 +97,20 @@ function faceDistance($a, $b) {
     return sqrt($sum);
 }
 
-
 $result = pg_query($conn, "
     SELECT face_descriptor
     FROM students
 ");
+
+if (!$result) {
+
+    echo json_encode([
+        "success" => false,
+        "msg" => pg_last_error($conn)
+    ]);
+
+    exit;
+}
 
 while ($row = pg_fetch_assoc($result)) {
 
@@ -91,18 +139,18 @@ while ($row = pg_fetch_assoc($result)) {
     }
 }
 
-
 $descriptor = pg_escape_string(
     $conn,
     json_encode($new_descriptor)
 );
 
-
 $insertQuery = "
     INSERT INTO students (
         student_id,
-        name,
+        first_name,
+        last_name,
         email,
+        password,
         year,
         section,
         face_descriptor,
@@ -110,8 +158,10 @@ $insertQuery = "
     )
     VALUES (
         '$student_id',
-        '$name',
+        '$first_name',
+        '$last_name',
         '$email',
+        '$hashedPassword',
         '$year',
         '$section',
         '$descriptor',
@@ -120,7 +170,6 @@ $insertQuery = "
 ";
 
 $insertResult = pg_query($conn, $insertQuery);
-
 
 if ($insertResult) {
 

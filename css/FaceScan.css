@@ -26,7 +26,7 @@ body {
     z-index: 1;
     max-width: 900px;
     width: 900px;
-    height: 600px;
+    height: 650px;
     margin: 70px auto;
     background: white;
     border-radius: 20px;
@@ -221,11 +221,11 @@ body {
 
   .form-section {
     width: 100%;
-    height: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
-    overflow: hidden;
+    overflow-y: auto;
+    padding: 5px 0;
   }
 
   .button-group {

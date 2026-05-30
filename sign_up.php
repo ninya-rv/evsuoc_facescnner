@@ -22,9 +22,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $role = 'instructor';
 
-    // =========================
-    // EMAIL VALIDATION (EVSU ONLY)
-    // =========================
     if (!preg_match("/^[a-zA-Z0-9._%+-]+@evsu\.edu\.ph$/", $email)) {
         echo json_encode([
             "success" => false,
@@ -33,9 +30,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // =========================
-    // PASSWORD VALIDATION
-    // =========================
     if (
         strlen($password) < 8 ||
         !preg_match('/[A-Z]/', $password) ||
@@ -48,9 +42,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // =========================
-    // CHECK EMAIL EXISTS
-    // =========================
     $check = "SELECT id FROM users WHERE email='$email' LIMIT 1";
     $result = pg_query($conn, $check);
 
@@ -70,9 +61,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // =========================
-    // INSERT USER (SUPABASE)
-    // =========================
     $sql = "
         INSERT INTO users (first_name, last_name, email, password, role, status)
         VALUES ('$first_name', '$last_name', '$email', '$password', '$role', 'active')
@@ -259,6 +247,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             color:#22543d
         }
 
+        .password-requirements{
+            display:none;
+            margin-top:12px;
+            font-size:12px;
+            padding:12px;
+            background:rgba(255,255,255,0.1);
+            border-radius:4px;
+            border-left:3px solid #ffdede;
+            width:100%;
+        }
+
+        .password-requirements.show{
+            display:block
+        }
+
+        .requirement{
+            margin:4px 0;
+            display:flex;
+            align-items:center;
+            gap:8px;
+        }
+
+        .requirement-icon{
+            width:16px;
+            height:16px;
+            border-radius:50%;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:11px;
+            font-weight:bold;
+        }
+
+        .requirement-icon.valid{
+            background:#48bb78;
+            color:#fff;
+        }
+
+        .requirement-icon.invalid{
+            background:#f56565;
+            color:#fff;
+        }
+
+        .requirement-text{
+            flex:1;
+        }
+
         .links{
             display:flex;
             justify-content:space-between;
@@ -348,6 +383,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <div class="field">
                     <input id="password" type="password" placeholder="Password" required />
+                    <div id="passwordRequirements" class="password-requirements">
+                        <div class="requirement">
+                            <div class="requirement-icon invalid" id="lengthIcon">✗</div>
+                            <div class="requirement-text">At least 8 characters</div>
+                        </div>
+                        <div class="requirement">
+                            <div class="requirement-icon invalid" id="uppercaseIcon">✗</div>
+                            <div class="requirement-text">At least one uppercase letter (A-Z)</div>
+                        </div>
+                        <div class="requirement">
+                            <div class="requirement-icon invalid" id="symbolIcon">✗</div>
+                            <div class="requirement-text">At least one symbol (!@#$%^&*)</div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="field">
@@ -383,6 +432,95 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 const form = document.getElementById('signUpForm');
 const msg = document.getElementById('message');
+const passwordInput = document.getElementById('password');
+const emailInput = document.getElementById('email');
+const passwordReqs = document.getElementById('passwordRequirements');
+
+// Password requirement checkers
+function checkPasswordRequirements(password) {
+    const requirements = {
+        length: password.length >= 8,
+        uppercase: /[A-Z]/.test(password),
+        symbol: /[\W_]/.test(password)
+    };
+    return requirements;
+}
+
+function updatePasswordIndicators(password) {
+    const reqs = checkPasswordRequirements(password);
+    
+    // Update length requirement
+    const lengthIcon = document.getElementById('lengthIcon');
+    if (reqs.length) {
+        lengthIcon.classList.remove('invalid');
+        lengthIcon.classList.add('valid');
+        lengthIcon.textContent = '✓';
+    } else {
+        lengthIcon.classList.remove('valid');
+        lengthIcon.classList.add('invalid');
+        lengthIcon.textContent = '✗';
+    }
+    
+    // Update uppercase requirement
+    const uppercaseIcon = document.getElementById('uppercaseIcon');
+    if (reqs.uppercase) {
+        uppercaseIcon.classList.remove('invalid');
+        uppercaseIcon.classList.add('valid');
+        uppercaseIcon.textContent = '✓';
+    } else {
+        uppercaseIcon.classList.remove('valid');
+        uppercaseIcon.classList.add('invalid');
+        uppercaseIcon.textContent = '✗';
+    }
+    
+    // Update symbol requirement
+    const symbolIcon = document.getElementById('symbolIcon');
+    if (reqs.symbol) {
+        symbolIcon.classList.remove('invalid');
+        symbolIcon.classList.add('valid');
+        symbolIcon.textContent = '✓';
+    } else {
+        symbolIcon.classList.remove('valid');
+        symbolIcon.classList.add('invalid');
+        symbolIcon.textContent = '✗';
+    }
+    
+    return reqs;
+}
+
+function allPasswordRequirementsMet(password) {
+    const reqs = checkPasswordRequirements(password);
+    return reqs.length && reqs.uppercase && reqs.symbol;
+}
+
+// Password input event listeners
+passwordInput.addEventListener('input', (e) => {
+    const password = e.target.value;
+    
+    if (password.length > 0) {
+        passwordReqs.classList.add('show');
+        updatePasswordIndicators(password);
+    } else {
+        passwordReqs.classList.remove('show');
+    }
+});
+
+passwordInput.addEventListener('focus', () => {
+    if (passwordInput.value.length > 0) {
+        passwordReqs.classList.add('show');
+    }
+});
+
+// Email validation
+emailInput.addEventListener('blur', () => {
+    const email = emailInput.value.trim();
+    if (email && !email.endsWith('@evsu.edu.ph')) {
+        msg.classList.add('show', 'error');
+        msg.textContent = "Email must be from @evsu.edu.ph domain.";
+    } else {
+        msg.classList.remove('show', 'error');
+    }
+});
 
 form.addEventListener('submit', async (e) => {
 
@@ -400,6 +538,20 @@ form.addEventListener('submit', async (e) => {
 
         msg.classList.add('show','error');
         msg.textContent = "Please fill all fields.";
+        return;
+    }
+
+    // Validate email domain
+    if (!email.endsWith('@evsu.edu.ph')) {
+        msg.classList.add('show','error');
+        msg.textContent = "Only @evsu.edu.ph emails are allowed.";
+        return;
+    }
+
+    // Validate password requirements
+    if (!allPasswordRequirementsMet(password)) {
+        msg.classList.add('show','error');
+        msg.textContent = "Password must be at least 8 characters, include 1 uppercase letter and 1 symbol.";
         return;
     }
 

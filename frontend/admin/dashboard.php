@@ -8,12 +8,13 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
 }
 
 include "../../backend/mail.php";
+
 if (isset($_GET['toggle']) && isset($_GET['id'])) {
 
     $student_id = pg_escape_string($conn, $_GET['id']);
 
     $checkStudent = pg_query($conn, "
-        SELECT status, email, name
+        SELECT status, email, first_name, last_name, photo
         FROM students
         WHERE student_id='$student_id'
     ");
@@ -35,7 +36,9 @@ if (isset($_GET['toggle']) && isset($_GET['id'])) {
         if ($newStatus === 'Active') {
             $emailSent = sendActivationEmail(
                 $student['email'],
-                $student['name']
+                $student['first_name'],
+                $student['last_name'],
+                $student['photo']
             );
 
             if (!$emailSent) {
@@ -119,14 +122,17 @@ $inactiveStudents = pg_fetch_assoc(
 $combinedQuery = "
     SELECT
         student_id AS id,
-        name,
+        photo,
+        first_name,
+        last_name,
         email,
         year,
         section,
         status
     FROM students
-    ORDER BY name ASC
+    ORDER BY first_name ASC, last_name ASC
 ";
+
 
 $result = pg_query($conn, $combinedQuery);
 
@@ -135,6 +141,20 @@ $combinedList = [];
 while ($row = pg_fetch_assoc($result)) {
     $combinedList[] = $row;
 }
+
+$totalSubjectsQuery = "
+    SELECT COUNT(DISTINCT subject) AS total
+    FROM instructor_assignment
+";
+
+$totalSubjectsResult = pg_query(
+    $conn,
+    $totalSubjectsQuery
+);
+
+$totalSubjects = pg_fetch_assoc(
+    $totalSubjectsResult
+)['total'];
 ?>
 
 <!DOCTYPE html>
@@ -170,28 +190,152 @@ while ($row = pg_fetch_assoc($result)) {
 
         .action-btn{
             border:none;
-            padding:8px 14px;
-            border-radius:6px;
-            color:white;
+            padding:8px;
+            border-radius:50%;
+            background:transparent;
             cursor:pointer;
             font-size:13px;
             font-weight:bold;
             transition:0.3s ease;
             text-decoration:none;
-            display:inline-block;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            width:38px;
+            height:38px;
         }
 
-        .btn-deactivate{
-            background:#dc3545;
+        .action-btn i {
+            color:#800000;
+            font-size:16px;
         }
 
-        .btn-activate{
-            background:#198754;
+        .btn-deactivate,
+        .btn-activate,
+        .btn-edit {
+            background:transparent;
         }
 
         .action-btn:hover{
-            transform:scale(1.05);
+            transform:scale(1.1);
             opacity:0.9;
+        }
+
+        .modal {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: auto;
+            border-radius: 10px;
+            padding: 20px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 18px;
+            font-size: 22px;
+            cursor: pointer;
+            color: #444;
+        }
+
+        .modal-content h4 {
+            margin-top: 0;
+            margin-bottom: 4px;
+            font-size: 22px;
+            color: #3f1f1f;
+        }
+
+        .modal-content p {
+            margin: 0 0 18px;
+            color: #5a5a5a;
+            line-height: 1.5;
+            font-size: 14px;
+        }
+
+        .modal-content .form-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+
+        .modal-content .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .modal-content label {
+            font-weight: 600;
+            color: #4f4f4f;
+            font-size: 13px;
+        }
+
+        .modal-content .form-row input,
+        .modal-content .form-row select {
+            padding: 12px 14px;
+            border: 1px solid #d1c7c7;
+            border-radius: 10px;
+            font-size: 14px;
+            width: 100%;
+            background: #faf8f6;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .modal-content .form-row input:focus,
+        .modal-content .form-row select:focus {
+            outline: none;
+            border-color: #8c4b4b;
+            box-shadow: 0 0 0 3px rgba(140, 75, 75, 0.12);
+            background: #fff;
+        }
+
+        .modal-actions {
+            margin-top: 24px;
+            text-align: right;
+        }
+
+        .primary-btn {
+            border: none;
+            background: #800000;
+            color: #fff;
+            padding: 12px 22px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s ease, opacity 0.2s ease, background 0.2s ease;
+        }
+
+        .primary-btn:hover {
+            transform: translateY(-1px);
+            opacity: 0.95;
+            background: #5f0000;
+        }
+
+        @media (min-width: 520px) {
+            .modal-content .form-row {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .modal-content .form-row .form-group.full-width {
+                grid-column: 1 / -1;
+            }
         }
 
     </style>
@@ -266,7 +410,7 @@ while ($row = pg_fetch_assoc($result)) {
             <li>
                 <a href="users.php">
                     <i class="fa-solid fa-users"></i>
-                    <span>Users</span>
+                    <span>Instructors</span>
                 </a>
             </li>
 
@@ -300,6 +444,10 @@ while ($row = pg_fetch_assoc($result)) {
             <div class="card">
                 <h4>Inactive Students</h4>
                 <p><?php echo $inactiveStudents; ?></p>
+            </div>
+            <div class="card">
+                <h4>Total Subject Codes</h4>
+                <p><?php echo $totalSubjects; ?></p>
             </div>
 
         </div>
@@ -378,6 +526,7 @@ while ($row = pg_fetch_assoc($result)) {
                 <thead>
 
                     <tr>
+                        <th>Photo</th>
                         <th>Student ID</th>
                         <th>Name</th>
                         <th>Email</th>
@@ -395,14 +544,18 @@ while ($row = pg_fetch_assoc($result)) {
 
                     <?php foreach ($combinedList as $row): ?>
 
-                        <tr>
+                        <tr data-id="<?php echo htmlspecialchars($row['id']); ?>">
+
+                            <td>
+                                <img src="<?php echo htmlspecialchars($row['photo']); ?>" alt="Student Photo" class="student-photo">
+                            </td>
 
                             <td>
                                 <?php echo htmlspecialchars($row['id']); ?>
                             </td>
 
                             <td>
-                                <?php echo htmlspecialchars($row['name']); ?>
+                                <?php echo htmlspecialchars($row['first_name'] . ' ' . $row['last_name']); ?>
                             </td>
 
                             <td>
@@ -441,18 +594,28 @@ while ($row = pg_fetch_assoc($result)) {
                                     <a
                                         href="?toggle=1&id=<?php echo urlencode($row['id']); ?>"
                                         class="action-btn btn-deactivate"
+                                        title="Deactivate"
                                     >
-                                        Deactivate
+                                        <i class="fa-solid fa-user-slash"></i>
                                     </a>
 
                                 <?php else: ?>
                                     <a
                                         href="?toggle=1&id=<?php echo urlencode($row['id']); ?>"
                                         class="action-btn btn-activate"
+                                        title="Activate"
                                     >
-                                        Activate
+                                        <i class="fa-solid fa-user-check"></i>
                                     </a>
                                 <?php endif; ?>
+
+                                <a
+                                    href="#"
+                                    class="action-btn btn-edit editStudentBtn"
+                                    title="Edit"
+                                >
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </a>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -465,6 +628,54 @@ while ($row = pg_fetch_assoc($result)) {
                 <?php endif; ?>
                 </tbody>
             </table>
+
+            <div id="editModal" class="modal">
+                <div class="modal-content">
+                    <span id="closeModal" class="modal-close">&times;</span>
+                    <h4>Edit Student</h4>
+                    <form id="editStudentForm" action="../../backend/update_student.php" method="POST">
+                        <input type="hidden" name="student_id" id="editStudentId">
+                        <p>Update the student’s email, year level, and section with accurate details.</p>
+                        <div class="form-row">
+                            <div class="form-group full-width">
+                                <label for="editEmail">Email</label>
+                                <input
+                                    type="email"
+                                    name="email"
+                                    id="editEmail"
+                                    placeholder="Student email"
+                                    required
+                                />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="editYear">Year</label>
+                                <select name="year" id="editYear" required>
+                                    <option value="">Select year</option>
+                                    <option value="1st year">1st Year</option>
+                                    <option value="2nd year">2nd Year</option>
+                                    <option value="3rd year">3rd Year</option>
+                                    <option value="4th year">4th Year</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="editSection">Section</label>
+                                <select name="section" id="editSection" required>
+                                    <option value="">Select section</option>
+                                    <option value="A">A</option>
+                                    <option value="B">B</option>
+                                    <option value="C">C</option>
+                                    <option value="D">D</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-actions">
+                            <button type="submit" class="primary-btn">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </section>
     </main>
 </div>
@@ -475,6 +686,12 @@ const filterSection = document.getElementById("filterSection");
 const filterStatus = document.getElementById("filterStatus");
 const filterToggle = document.getElementById("filterToggle");
 const filterPanel = document.getElementById("filterPanel");
+const editModal = document.getElementById("editModal");
+const editStudentId = document.getElementById("editStudentId");
+const editEmail = document.getElementById("editEmail");
+const editYear = document.getElementById("editYear");
+const editSection = document.getElementById("editSection");
+const closeModal = document.getElementById("closeModal");
 
 function filterTable() {
 
@@ -555,6 +772,37 @@ filterToggle.addEventListener("click", () => {
 const profileBtn = document.getElementById("profileBtn");
 const dropdown = document.getElementById("profileDropdown");
 
+function openEditModal(event) {
+    event.preventDefault();
+    const button = event.currentTarget;
+    const row = button.closest("tr");
+
+    if (!row) return;
+
+    const cells = row.querySelectorAll("td");
+    editStudentId.value = row.dataset.id || cells[0].textContent.trim();
+    editEmail.value = cells[2].textContent.trim();
+    editYear.value = cells[3].textContent.trim();
+    editSection.value = cells[4].textContent.trim();
+    editModal.style.display = "flex";
+}
+
+function closeEditModal() {
+    editModal.style.display = "none";
+}
+
+const editButtons = document.querySelectorAll(".editStudentBtn");
+editButtons.forEach(button => {
+    button.addEventListener("click", openEditModal);
+});
+
+closeModal.addEventListener("click", closeEditModal);
+window.addEventListener("click", event => {
+    if (event.target === editModal) {
+        closeEditModal();
+    }
+});
+
 profileBtn.addEventListener("click", () => {
 
     dropdown.style.display =
@@ -587,11 +835,12 @@ downloadPDF.addEventListener("click", () => {
             if (cells.length >= 6) {
 
                 tableData.push([
-                    cells[0].textContent.trim(), 
                     cells[1].textContent.trim(), 
                     cells[2].textContent.trim(), 
                     cells[3].textContent.trim(), 
                     cells[4].textContent.trim(), 
+                    cells[5].textContent.trim(), 
+                    cells[6].textContent.trim()
                 ]);
             }
         }

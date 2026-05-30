@@ -16,10 +16,10 @@ $instructor_id = $_SESSION['user_id'];
 
 $instructorQuery = pg_query_params(
     $conn,
-    "SELECT name, email 
+    "SELECT first_name, last_name, email, photo
      FROM users 
      WHERE id = $1 
-     AND role = 'instructor' 
+     AND role = 'instructor'
      LIMIT 1",
     [$instructor_id]
 );
@@ -28,8 +28,9 @@ if ($instructorQuery && pg_num_rows($instructorQuery) > 0) {
 
     $instructorData = pg_fetch_assoc($instructorQuery);
 
-    $instructorName = $instructorData['name'];
+    $instructorName = $instructorData['first_name'] . " " . $instructorData['last_name'];
     $instructorEmail = $instructorData['email'];
+    $profilePhotoDB = $instructorData['photo']; // ✅ FIX: use DB photo correctly
 
     $nameParts = explode(" ", trim($instructorName));
 
@@ -48,6 +49,7 @@ if ($instructorQuery && pg_num_rows($instructorQuery) > 0) {
 
     $instructorName = "Instructor";
     $instructorEmail = "No email found";
+    $profilePhotoDB = null;
     $initials = "IN";
 }
 
@@ -56,58 +58,32 @@ $totalStudents = 0;
 $activeStudents = 0;
 $inactiveStudents = 0;
 
-$assignmentQuery = pg_query_params(
-    $conn,
-    "SELECT DISTINCT year_level, section
-     FROM instructor_assignment
-     WHERE instructor_name = $1",
-    [$instructorName]
-);
+$instructor_name = trim($instructorName);
+$escapedInstructorName = pg_escape_string($conn, $instructor_name);
 
-$conditions = [];
+$studentQueryString = "
+    SELECT DISTINCT s.*
+    FROM students s
+    JOIN instructor_assignment ia
+      ON LOWER(TRIM(s.year)) = LOWER(TRIM(ia.year_level))
+      AND LOWER(TRIM(s.section)) = LOWER(TRIM(ia.section))
+    WHERE LOWER(TRIM(ia.instructor_name)) = LOWER(TRIM('$escapedInstructorName'))
+    ORDER BY s.year ASC, s.section ASC, s.first_name ASC, s.last_name ASC
+";
 
-if ($assignmentQuery && pg_num_rows($assignmentQuery) > 0) {
+$studentResult = pg_query($conn, $studentQueryString);
 
-    while ($assignment = pg_fetch_assoc($assignmentQuery)) {
+if ($studentResult) {
 
-        $year = pg_escape_string($conn, $assignment['year_level']);
-        $section = pg_escape_string($conn, $assignment['section']);
+    while ($student = pg_fetch_assoc($studentResult)) {
 
-        $conditions[] = "(year = '{$year}' AND section = '{$section}')";
-    }
-}
+        $assignedStudents[] = $student;
+        $totalStudents++;
 
-if (!empty($conditions)) {
-
-    $studentQueryString = "
-        SELECT *
-        FROM students
-        WHERE " . implode(" OR ", $conditions) . "
-        ORDER BY year ASC, section ASC, name ASC
-    ";
-
-    $studentResult = pg_query($conn, $studentQueryString);
-
-    if ($studentResult) {
-
-        while ($student = pg_fetch_assoc($studentResult)) {
-
-            $assignedStudents[] = $student;
-
-            $totalStudents++;
-
-            if (isset($student['status'])) {
-
-                if (strtolower($student['status']) === 'active') {
-                    $activeStudents++;
-                } else {
-                    $inactiveStudents++;
-                }
-
-            } else {
-
-                $activeStudents++;
-            }
+        if (isset($student['status']) && strtolower(trim($student['status'])) === 'active') {
+            $activeStudents++;
+        } else {
+            $inactiveStudents++;
         }
     }
 }
@@ -133,7 +109,16 @@ if (!empty($conditions)) {
 
         <div class="profile-dropdown" id="profileDropdown" style="display:none;">
             <div class="profile-header">
-                <div class="profile-circle"><?php echo htmlspecialchars($initials); ?></div>
+                <?php
+                $profilePhoto = !empty($profilePhotoDB)
+                    ? $profilePhotoDB
+                    : "https://ui-avatars.com/api/?name=" . urlencode($instructorName);
+                ?>
+
+                    <div class="profile-circle">
+                        <img src="<?php echo htmlspecialchars($profilePhoto); ?>" 
+                            style="width:40px;height:40px;border-radius:50%;object-fit:cover;" />
+                    </div>
                 <br>
                 <h4><?php echo htmlspecialchars($instructorName); ?></h4>
                 <p><?php echo htmlspecialchars($instructorEmail); ?></p>
@@ -141,8 +126,25 @@ if (!empty($conditions)) {
             </div>
 
             <div class="profile-actions">
-                <a href="../../index.php">
-                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+
+                <a href="#" onclick="loadPage('account_settings.php')">
+                    <i class="fa-solid fa-user-gear"></i>
+                    Account Settings
+                </a>
+
+                <a href="#" onclick="loadPage('upload_photo.php')">
+                    <i class="fa-solid fa-image"></i>
+                    Upload Photo
+                </a>
+
+                <a href="#" onclick="loadPage('change_password.php')">
+                    <i class="fa-solid fa-lock"></i>
+                    Change Password
+                </a>
+
+                <a href="../../index.php" class="logout-link">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    Logout
                 </a>
             </div>
         </div>
@@ -174,6 +176,7 @@ if (!empty($conditions)) {
         </ul>
     </aside>
     <main class="main">
+        <div id="dynamicContent"></div>
         <h3>Dashboard</h3>
         <div class="cards">
             <div class="card">
@@ -230,7 +233,6 @@ if (!empty($conditions)) {
                             <option value="B">B</option>
                             <option value="C">C</option>
                             <option value="D">D</option>
-                            <option value="E">E</option>
                         </select>
                     </div>
                     <div class="filter-group">
@@ -245,33 +247,91 @@ if (!empty($conditions)) {
             </div>
             <table class="student-table" id="userTable">
                 <thead>
+                <tr>
+                    <th>Photo</th>
+                    <th>Student ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Year</th>
+                    <th>Section</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+            <?php if (!empty($assignedStudents)): ?>
+
+                <?php foreach ($assignedStudents as $student): ?>
+
+                    <?php
+                        $studentPhoto = !empty($student['photo'])
+                            ? $student['photo']
+                            : "https://ui-avatars.com/api/?name=" .
+                                urlencode(
+                                    $student['first_name'] . ' ' .
+                                    $student['last_name']
+                                );
+                    ?>
+
                     <tr>
-                        <th>Student ID</th>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Year</th>
-                        <th>Section</th>
-                        <th>Status</th>
+
+                        <td>
+                            <img
+                                src="<?php echo htmlspecialchars($studentPhoto); ?>"
+                                alt="Student Photo"
+                                class="student-photo"
+                            >
+                        </td>
+
+                        <td>
+                            <?php echo htmlspecialchars($student['student_id']); ?>
+                        </td>
+
+                        <td>
+                            <?php
+                            echo htmlspecialchars(
+                                $student['first_name'] . ' ' .
+                                $student['last_name']
+                            );
+                            ?>
+                        </td>
+
+                        <td>
+                            <?php echo htmlspecialchars($student['email']); ?>
+                        </td>
+
+                        <td>
+                            <?php echo htmlspecialchars($student['year']); ?>
+                        </td>
+
+                        <td>
+                            <?php echo htmlspecialchars($student['section']); ?>
+                        </td>
+
+                        <td>
+                            <?php
+                            echo isset($student['status'])
+                                ? htmlspecialchars($student['status'])
+                                : 'inactive';
+                            ?>
+                        </td>
+
                     </tr>
-                </thead>
-                <tbody>
-                <?php if (!empty($assignedStudents)): ?>
-                    <?php foreach ($assignedStudents as $student): ?>
-                        <tr>
-                            <td><?php echo htmlspecialchars($student['student_id']); ?></td>
-                            <td><?php echo htmlspecialchars($student['name']); ?></td>
-                            <td><?php echo htmlspecialchars($student['email']); ?></td>
-                            <td><?php echo htmlspecialchars($student['year']); ?></td>
-                            <td><?php echo htmlspecialchars($student['section']); ?></td>
-                            <td><?php echo isset($student['status']) ? htmlspecialchars($student['status']) : 'inactive'; ?></td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <tr>
-                        <td colspan="6" style="text-align:center;">No assigned students found for your year and section.</td>
-                    </tr>
-                <?php endif; ?>
-                </tbody>
+
+                <?php endforeach; ?>
+
+            <?php else: ?>
+
+                <tr>
+                    <td colspan="7" style="text-align:center;">
+                        No assigned students found for your year and section.
+                    </td>
+                </tr>
+
+            <?php endif; ?>
+
+            </tbody>
             </table>
         </section>
     </main>
@@ -341,6 +401,7 @@ if (!empty($conditions)) {
                     : '<i class="fa-solid fa-arrows-rotate"></i>';
             });
         }
+        
 
         const profileBtn = document.getElementById("profileBtn");
         const dropdown = document.getElementById("profileDropdown");
@@ -372,15 +433,15 @@ document.getElementById("downloadPDF").addEventListener("click", () => {
 
         const cells = row.querySelectorAll("td");
 
-        if (cells.length >= 6) {
+        if (cells.length >= 7) {
 
             tableData.push([
-                cells[0].textContent.trim(), 
-                cells[1].textContent.trim(),
-                cells[2].textContent.trim(), 
+                cells[1].textContent.trim(), 
+                cells[2].textContent.trim(),
                 cells[3].textContent.trim(), 
                 cells[4].textContent.trim(), 
-                cells[5].textContent.trim()  
+                cells[5].textContent.trim(), 
+                cells[6].textContent.trim()  
             ]);
         }
     });
@@ -410,7 +471,31 @@ document.getElementById("downloadPDF").addEventListener("click", () => {
 
     doc.save("students.pdf");
 });
+function loadPage(page){
+
+    fetch(page)
+    .then(response => response.text())
+    .then(data => {
+
+        // hide dashboard content
+        document.querySelector(".cards").style.display = "none";
+        document.querySelector(".student-section").style.display = "none";
+
+        const dashboardTitle = document.querySelector(".main h3");
+
+        if(dashboardTitle){
+            dashboardTitle.style.display = "none";
+        }
+
+        // show selected page
+        document.getElementById("dynamicContent").innerHTML = data;
+
+        // close dropdown
+        document.getElementById("profileDropdown").style.display = "none";
+    });
+}
 </script>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 </body>

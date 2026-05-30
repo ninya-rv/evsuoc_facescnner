@@ -17,7 +17,7 @@ if ($_SESSION['role'] !== 'instructor') {
 $instructor_id = $_SESSION['user_id'];
 
 $instructorQuery = "
-    SELECT name, email
+    SELECT first_name, last_name, email
     FROM users
     WHERE id = '$instructor_id'
     AND role = 'instructor'
@@ -30,7 +30,7 @@ if ($instructorResult && pg_num_rows($instructorResult) > 0) {
 
     $instructorData = pg_fetch_assoc($instructorResult);
 
-    $instructorName  = trim($instructorData['name']);
+    $instructorName  = trim($instructorData['first_name'] . ' ' . $instructorData['last_name']);
     $instructorEmail = trim($instructorData['email']);
 
     $nameParts = explode(" ", $instructorName);
@@ -119,7 +119,7 @@ if ($assignmentResult) {
 
                     $name = pg_escape_string(
                         $conn,
-                        trim($student['name'])
+                        trim($student['first_name'] . ' ' . $student['last_name'])
                     );
 
                     $email = pg_escape_string(
@@ -243,20 +243,26 @@ if ($attendanceResult) {
 }
 
 
-$present = count(array_filter(
-    $attendanceList,
-    fn($a) => strtolower(trim($a['status'])) == 'present'
-));
+$present = 0;
+$absent  = 0;
+$late    = 0;
 
-$absent = count(array_filter(
-    $attendanceList,
-    fn($a) => strtolower(trim($a['status'])) == 'absent'
-));
+foreach ($attendanceList as $attendance) {
 
-$late = count(array_filter(
-    $attendanceList,
-    fn($a) => strtolower(trim($a['status'])) == 'late'
-));
+    $status = strtolower(trim($attendance['status']));
+
+    if ($status === 'present') {
+        $present++;
+    }
+
+    if ($status === 'absent') {
+        $absent++;
+    }
+
+    if ($status === 'late') {
+        $late++;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -325,17 +331,17 @@ $late = count(array_filter(
 
     <div class="card">
         <h4>Present</h4>
-        <p><?php echo $present; ?></p>
+        <p id="presentCount"><?php echo $present; ?></p>
     </div>
 
     <div class="card">
         <h4>Absent</h4>
-        <p><?php echo $absent; ?></p>
+        <p id="absentCount"><?php echo $absent; ?></p>
     </div>
 
     <div class="card">
         <h4>Late</h4>
-        <p><?php echo $late; ?></p>
+        <p id="lateCount"><?php echo $late; ?></p>
     </div>
 
 </div>
@@ -530,6 +536,110 @@ $late = count(array_filter(
 
     doc.save("attendance.pdf");
 });
+
+const searchInput = document.getElementById("searchInput");
+const filterYear = document.getElementById("filterYear");
+const filterSection = document.getElementById("filterSection");
+const filterDay = document.getElementById("filterDay");
+const filterDate = document.getElementById("filterDate");
+const filterStatus = document.getElementById("filterStatus");
+
+const presentCount = document.getElementById("presentCount");
+const absentCount = document.getElementById("absentCount");
+const lateCount = document.getElementById("lateCount");
+
+function filterAttendanceTable() {
+
+    const searchValue = searchInput.value.toLowerCase();
+    const yearValue = filterYear.value.toLowerCase();
+    const sectionValue = filterSection.value.toLowerCase();
+    const dayValue = filterDay.value.toLowerCase();
+    const dateValue = filterDate.value;
+    const statusValue = filterStatus.value.toLowerCase();
+
+    const rows = document.querySelectorAll("#attendanceTable tr");
+
+    let present = 0;
+    let absent = 0;
+    let late = 0;
+
+    rows.forEach(row => {
+
+        const cols = row.querySelectorAll("td");
+
+        if (cols.length < 11) return;
+
+        const studentId = cols[0].textContent.toLowerCase();
+        const name = cols[1].textContent.toLowerCase();
+        const email = cols[2].textContent.toLowerCase();
+        const subject = cols[3].textContent.toLowerCase();
+        const year = cols[4].textContent.toLowerCase();
+        const section = cols[5].textContent.toLowerCase();
+        const day = cols[6].textContent.toLowerCase();
+        const date = cols[7].textContent.trim();
+        const status = cols[10].textContent.toLowerCase();
+
+        const matchesSearch =
+            studentId.includes(searchValue) ||
+            name.includes(searchValue) ||
+            email.includes(searchValue) ||
+            subject.includes(searchValue);
+
+        const matchesYear =
+            !yearValue || year === yearValue;
+
+        const matchesSection =
+            !sectionValue || section === sectionValue;
+
+        const matchesDay =
+            !dayValue || day === dayValue;
+
+        const matchesDate =
+            !dateValue || date === dateValue;
+
+        const matchesStatus =
+            !statusValue || status === statusValue;
+
+        if (
+            matchesSearch &&
+            matchesYear &&
+            matchesSection &&
+            matchesDay &&
+            matchesDate &&
+            matchesStatus
+        ) {
+
+            row.style.display = "";
+
+            if (status === "present") {
+                present++;
+            }
+
+            if (status === "absent") {
+                absent++;
+            }
+
+            if (status === "late") {
+                late++;
+            }
+
+        } else {
+
+            row.style.display = "none";
+        }
+    });
+
+    presentCount.textContent = present;
+    absentCount.textContent = absent;
+    lateCount.textContent = late;
+}
+
+searchInput.addEventListener("input", filterAttendanceTable);
+filterYear.addEventListener("change", filterAttendanceTable);
+filterSection.addEventListener("change", filterAttendanceTable);
+filterDay.addEventListener("change", filterAttendanceTable);
+filterDate.addEventListener("change", filterAttendanceTable);
+filterStatus.addEventListener("change", filterAttendanceTable);
 </script>
 </body>
 </html>

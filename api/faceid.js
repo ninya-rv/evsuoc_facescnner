@@ -9,10 +9,67 @@ function showAlert(message) {
 function showWarning(message) {
   const warningDiv = document.getElementById("warning");
 
-  if (warningDiv && !isLocalhost()) {
-    warningDiv.innerHTML = message;
+  if (warningDiv) {
+    warningDiv.innerHTML = `
+      <div style="
+        background:#ffe5e5;
+        color:#b30000;
+        padding:12px;
+        border-radius:8px;
+        margin-top:15px;
+        font-size:14px;
+        border:1px solid #ffb3b3;
+        text-align:center;
+      ">
+        ${message}
+      </div>
+    `;
+  }
+
+  if (!isLocalhost()) {
+    alert(message);
   }
 }
+
+function isValidEvsuEmail(email) {
+  return /^[a-zA-Z0-9._%+-]+@evsu\.edu\.ph$/i.test(email);
+}
+
+function isValidPassword(password) {
+  return (
+    password.length >= 8 &&
+    /[A-Z]/.test(password) &&
+    /[\W_]/.test(password)
+  );
+}
+
+function validateRegistrationFields() {
+  const student_id = document.getElementById('student_id').value.trim();
+  const first_name = document.getElementById('first_name').value.trim();
+  const last_name = document.getElementById('last_name').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const year = document.getElementById('year').value;
+  const section = document.getElementById('section').value;
+
+    if (!student_id || !first_name || !last_name || !email || !password || !year || !section) {
+        showWarning("⚠️ Please fill all fields first.");
+        return false;
+    }
+
+    if (!isValidEvsuEmail(email)) {
+        showWarning("⚠️ Only @evsu.edu.ph email addresses are accepted.");
+        return false;
+    }
+
+    if (!isValidPassword(password)) {
+        showWarning("⚠️ Password must contain at least 8 characters, 1 uppercase letter, and 1 special symbol.");
+        return false;
+    }
+
+  return true;
+}
+
 const video = document.getElementById('video');
 const statusDiv = document.getElementById('status');
 const warningDiv = document.getElementById('warning');
@@ -40,16 +97,16 @@ async function startCamera() {
 }
 async function registerFace() {
     warningDiv.innerText = "";
-    const student_id = document.getElementById('student_id').value.trim();
-    const name = document.getElementById('name').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const year = document.getElementById('year').value;
-    const section = document.getElementById('section').value;
-    if (!student_id || !name || !email || !year || !section) {
-
-        showWarning("⚠️ Please fill all fields first.");
+    if (!validateRegistrationFields()) {
         return false;
     }
+    const student_id = document.getElementById('student_id').value.trim();
+    const first_name = document.getElementById('first_name').value.trim();
+    const last_name = document.getElementById('last_name').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const year = document.getElementById('year').value;
+    const section = document.getElementById('section').value;
     const agree = document.getElementById("agree_terms");
     if (!agree.checked) {
 
@@ -80,8 +137,10 @@ async function registerFace() {
             body: JSON.stringify({
 
                 student_id,
-                name,
+                first_name,
+                last_name,
                 email,
+                password,
                 year,
                 section,
                 descriptor,
@@ -124,6 +183,9 @@ function closeTerms() {
 function nextStep() {
     const form = document.getElementById("registrationForm");
     if (!form.reportValidity()) {
+        return;
+    }
+    if (!validateRegistrationFields()) {
         return;
     }
     const agreeTerms = document.getElementById("agree_terms");

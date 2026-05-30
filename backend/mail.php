@@ -1,7 +1,8 @@
 <?php
 
-function sendActivationEmail($toEmail, $name)
+function sendActivationEmail($toEmail, $first_name, $last_name)
 {
+    $name = trim($first_name . ' ' . $last_name);
     $apiKey = getenv('BREVO_API_KEY');
 
     $data = [
